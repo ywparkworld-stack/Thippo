@@ -108,7 +108,7 @@ export default function UsePage() {
           <Link href="/" className="text-xl font-bold text-indigo-600 tracking-tight">Thippo</Link>
           <div className="flex items-center gap-4">
             <Link href="/lend" className="text-sm text-gray-500 hover:text-indigo-600 transition-colors hidden sm:block">貸出したい方はこちら →</Link>
-            <a href="#" className="text-sm bg-purple-600 text-white px-4 py-2 rounded-full hover:bg-purple-700 transition-colors">無料登録</a>
+            <Link href="/register" className="text-sm bg-purple-600 text-white px-4 py-2 rounded-full hover:bg-purple-700 transition-colors">無料登録</Link>
           </div>
         </div>
       </nav>
@@ -187,9 +187,9 @@ export default function UsePage() {
                     <span className="text-xl font-bold text-gray-900">¥{space.pricePerHour.toLocaleString()}</span>
                     <span className="text-sm text-gray-400"> / 時間</span>
                   </div>
-                  <button className="bg-purple-600 text-white text-sm px-4 py-2 rounded-full hover:bg-purple-700 transition-colors font-semibold">
+                  <Link href="/register" className="bg-purple-600 text-white text-sm px-4 py-2 rounded-full hover:bg-purple-700 transition-colors font-semibold">
                     今すぐ予約
-                  </button>
+                  </Link>
                 </div>
               </div>
             </div>
