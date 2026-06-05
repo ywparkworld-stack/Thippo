@@ -276,10 +276,10 @@ export default function RegisterPage() {
               <p>✓ 支払い方法の登録</p>
             </div>
             <Link
-              href="/use"
+              href="/select-role"
               className="block w-full bg-indigo-600 text-white py-4 rounded-xl font-semibold hover:bg-indigo-700 transition-colors"
             >
-              本日の空きスペースを見る
+              利用目的を選ぶ
             </Link>
           </div>
         )}
