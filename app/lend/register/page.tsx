@@ -137,7 +137,7 @@ export default function RegisterLendPage() {
         <p className="text-center text-xs text-gray-400 mt-6">
           <Link href="/" className="hover:text-indigo-600">← トップに戻る</Link>
           　・　すでにアカウントをお持ちの方は
-          <Link href="/login" className="text-indigo-600 hover:underline ml-1">ログイン</Link>
+          <Link href="/lend/login" className="text-indigo-600 hover:underline ml-1">ログイン</Link>
         </p>
       </div>
     </div>
