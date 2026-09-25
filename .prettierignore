@@ -1,0 +1,12 @@
+legacy/
+pnpm-lock.yaml
+**/.next/
+**/node_modules/
+SPEC.md
+supabase/migrations/
+packages/db/src/database.types.ts
+supabase/config.toml
+supabase/.temp/
+legacy/
+AGENTS.md
+CLAUDE.md

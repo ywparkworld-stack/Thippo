@@ -1,0 +1,9 @@
+/* 3アプリ共通のテーマ。各アプリの globals.css から @import する。 */
+@theme {
+  --color-brand-50: #eef7f4;
+  --color-brand-100: #d5ece4;
+  --color-brand-300: #8fcbb6;
+  --color-brand-600: #1f7a5c;
+  --color-brand-700: #19634b;
+  --font-sans: "Hiragino Sans", "Noto Sans JP", system-ui, sans-serif;
+}

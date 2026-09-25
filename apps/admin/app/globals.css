@@ -1,0 +1,7 @@
+@import "tailwindcss";
+@import "@thippo/ui/styles.css";
+@source "../../../packages/ui/src";
+
+body {
+  @apply bg-zinc-50 text-zinc-900;
+}

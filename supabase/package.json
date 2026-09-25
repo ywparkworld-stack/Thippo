@@ -1,0 +1,21 @@
+{
+  "name": "@thippo/supabase",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@thippo/core": "workspace:*",
+    "@thippo/eslint-config": "workspace:*",
+    "@types/node": "^22.19.1",
+    "@types/pg": "^8.15.6",
+    "eslint": "^9.39.1",
+    "pg": "^8.16.3",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.4"
+  }
+}

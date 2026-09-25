@@ -1,0 +1,19 @@
+{
+  "name": "@thippo/eslint-config",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./base": "./base.mjs",
+    "./next": "./next.mjs"
+  },
+  "dependencies": {
+    "@eslint/js": "^9.39.1",
+    "eslint-config-next": "16.2.7",
+    "globals": "^16.5.0",
+    "typescript-eslint": "^8.46.4"
+  },
+  "peerDependencies": {
+    "eslint": "^9"
+  }
+}
