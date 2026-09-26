@@ -257,7 +257,7 @@ subject = "【thippo】パスワードの再設定"
 content_path = "./supabase/templates/recovery.html"
 
 [auth.email.template.invite]
-subject = "【thippo】貸出主センターへの招待"
+subject = "【thippo】掲載のお申し込みを承認しました（貸出主センターへの招待）"
 content_path = "./supabase/templates/invite.html"
 
 [auth.email.template.email_change]

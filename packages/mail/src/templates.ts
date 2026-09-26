@@ -68,6 +68,54 @@ ${ctx.guestUrl}/mypage/identity
       ),
     };
   },
+
+  hostApplicationReceived(
+    ctx: TemplateContext,
+    data: { contactName: string; companyName: string },
+  ): Rendered {
+    return {
+      subject: "【thippo】掲載のお申し込みを受け付けました",
+      text: withSignature(
+        `
+${data.companyName}
+${data.contactName} 様
+
+thippo へのスペース掲載のお申し込みを受け付けました。
+内容を確認のうえ、運営よりご連絡いたします。
+
+承認されると、貸出主センターへの招待メールが届きます。
+`,
+        ctx,
+      ),
+    };
+  },
+
+  hostApplicationAdminNotice(
+    ctx: TemplateContext,
+    data: {
+      companyName: string;
+      contactName: string;
+      email: string;
+      phone: string;
+      address: string;
+      note: string;
+    },
+  ): Rendered {
+    return {
+      subject: `【thippo 運営】掲載申込がありました：${data.companyName}`,
+      text: `
+新しい掲載申込があります。運営管理の「掲載申込」から審査してください。
+
+会社名：${data.companyName}
+担当者：${data.contactName}
+メール：${data.email}
+電話：${data.phone}
+所在地：${data.address}
+備考：
+${data.note || "（なし）"}
+`.trim(),
+    };
+  },
 } as const;
 
 export type TemplateName = keyof typeof templates;

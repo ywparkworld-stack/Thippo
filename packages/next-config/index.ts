@@ -3,7 +3,14 @@ import type { NextConfig } from "next";
 /** 3アプリ共通の Next.js 設定。 */
 export function baseNextConfig(extraHeaders: { key: string; value: string }[] = []): NextConfig {
   return {
-    transpilePackages: ["@thippo/auth", "@thippo/core", "@thippo/db", "@thippo/mail", "@thippo/ui"],
+    transpilePackages: [
+      "@thippo/auth",
+      "@thippo/core",
+      "@thippo/db",
+      "@thippo/mail",
+      "@thippo/payments",
+      "@thippo/ui",
+    ],
     poweredByHeader: false,
     async headers() {
       return [

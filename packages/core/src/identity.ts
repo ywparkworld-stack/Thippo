@@ -34,6 +34,17 @@ export const IDENTITY_FILE_EXTENSION: Record<IdentityMimeType, string> = {
   "application/pdf": "pdf",
 };
 
+/** 画像ファイルの先頭のバイト列から種類を判定する（スペースの写真用。WebP を含む） */
+export function detectImageType(
+  head: Uint8Array,
+): "image/jpeg" | "image/png" | "image/webp" | null {
+  const t = detectFileType(head);
+  if (t === "image/jpeg" || t === "image/png") return t;
+  const ascii = (from: number, to: number) => String.fromCharCode(...head.slice(from, to));
+  if (head.length >= 12 && ascii(0, 4) === "RIFF" && ascii(8, 12) === "WEBP") return "image/webp";
+  return null;
+}
+
 /**
  * ファイルの先頭のバイト列から種類を判定する。拡張子や Content-Type は偽れるため、
  * アップロード後にサーバー側で中身を確かめる。

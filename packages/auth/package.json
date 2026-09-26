@@ -9,7 +9,8 @@
     "./proxy": "./src/proxy.ts",
     "./actions": "./src/actions.ts",
     "./confirm": "./src/confirm.ts",
-    "./forms": "./src/forms.tsx"
+    "./forms": "./src/forms.tsx",
+    "./urls": "./src/urls.ts"
   },
   "scripts": {
     "lint": "eslint .",

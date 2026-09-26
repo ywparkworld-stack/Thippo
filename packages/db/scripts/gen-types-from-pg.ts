@@ -58,7 +58,7 @@ async function main() {
       select c.table_name, c.column_name, c.udt_name, c.is_nullable, c.column_default, c.is_identity, c.is_generated
       from information_schema.columns c
       join information_schema.tables t on t.table_schema = c.table_schema and t.table_name = c.table_name
-      where c.table_schema = 'public' and t.table_type = 'BASE TABLE'
+      where c.table_schema = 'public' and t.table_type in ('BASE TABLE', 'VIEW')
       order by c.table_name, c.column_name`)
   ).rows;
   const fnParams = (
@@ -99,10 +99,21 @@ async function main() {
       where c.contype = 'f' and n.nspname = 'public' and c.confrelid::regclass::text not like '%.%'
       order by 1, 2`)
   ).rows;
+  const viewNames = new Set(
+    (
+      await client.query<{ table_name: string }>(
+        "select table_name from information_schema.views where table_schema = 'public'",
+      )
+    ).rows.map((r) => r.table_name),
+  );
   await client.end();
 
   const tables = new Map<string, typeof cols>();
-  for (const c of cols) tables.set(c.table_name, [...(tables.get(c.table_name) ?? []), c]);
+  const views = new Map<string, typeof cols>();
+  for (const c of cols) {
+    const target = viewNames.has(c.table_name) ? views : tables;
+    target.set(c.table_name, [...(target.get(c.table_name) ?? []), c]);
+  }
 
   const out: string[] = [];
   out.push("// このファイルは自動生成です。直接編集しないでください（packages/db/README.md）。");
@@ -145,7 +156,20 @@ async function main() {
     out.push("      };");
   }
   out.push("    };");
-  out.push("    Views: { [_ in never]: never };");
+  if (views.size === 0) out.push("    Views: { [_ in never]: never };");
+  else {
+    out.push("    Views: {");
+    for (const [view, columns] of views) {
+      out.push(`      ${view}: {`);
+      out.push("        Row: {");
+      for (const c of columns)
+        out.push(`          ${c.column_name}: ${tsType(c.udt_name, enums)} | null;`);
+      out.push("        };");
+      out.push("        Relationships: [];");
+      out.push("      };");
+    }
+    out.push("    };");
+  }
   out.push("    Functions: {");
   const byFn = new Map<string, typeof fnParams>();
   for (const r of fnParams) byFn.set(r.routine_name, [...(byFn.get(r.routine_name) ?? []), r]);

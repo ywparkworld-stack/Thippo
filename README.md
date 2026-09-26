@@ -15,6 +15,7 @@ packages/
   db/            Supabase の型定義とクライアント生成
   auth/          3アプリ共通の認証（proxy・ログイン・2段階認証・レート制限・操作ログ）
   mail/          メールの文面（templates.ts に集約）と送信（Resend）
+  payments/      Stripe（Connect・Webhook の署名検証と重複処理の防止）
   ui/            共通の UI コンポーネント
   eslint-config/ ESLint の共通設定
   next-config/   Next.js の共通設定
@@ -64,6 +65,7 @@ CI では両方を実行する（`.github/workflows/ci.yml`）。
 
 - 認証の設定とロールの考え方：[docs/auth.md](docs/auth.md)
 - 運営管理のアクセス制限・admin ロールの付与：[docs/admin-access.md](docs/admin-access.md)
+- Stripe の設定と Webhook：[docs/stripe.md](docs/stripe.md)
 
 ローカルで運営管理を開くときは、admin アプリの `.env.local` に `APP_ENV=development` と `ADMIN_ACCESS_GATE=none` を設定する。
 

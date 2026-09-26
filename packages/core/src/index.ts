@@ -10,3 +10,4 @@ export * from "./validation/auth";
 export * from "./identity";
 export * from "./mail";
 export * from "./validation/profile";
+export * from "./validation/space";

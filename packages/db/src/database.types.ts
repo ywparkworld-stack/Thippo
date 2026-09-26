@@ -326,7 +326,7 @@ export type Database = {
         };
         Relationships: [
           { foreignKeyName: "host_members_host_id_fkey"; columns: ["host_id"]; isOneToOne: false; referencedRelation: "hosts"; referencedColumns: ["id"] },
-          { foreignKeyName: "host_members_user_id_fkey"; columns: ["user_id"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] },
+          { foreignKeyName: "host_members_user_id_fkey"; columns: ["user_id"]; isOneToOne: true; referencedRelation: "profiles"; referencedColumns: ["id"] },
         ];
       };
       hosts: {
@@ -767,24 +767,30 @@ export type Database = {
       };
       stripe_events: {
         Row: {
+          attempts: number;
           error: string | null;
           event_id: string;
+          locked_until: string | null;
           payload: Json;
           processed_at: string | null;
           received_at: string;
           type: string;
         };
         Insert: {
+          attempts?: number;
           error?: string | null;
           event_id: string;
+          locked_until?: string | null;
           payload: Json;
           processed_at?: string | null;
           received_at?: string;
           type: string;
         };
         Update: {
+          attempts?: number;
           error?: string | null;
           event_id?: string;
+          locked_until?: string | null;
           payload?: Json;
           processed_at?: string | null;
           received_at?: string;
@@ -793,11 +799,25 @@ export type Database = {
         Relationships: [];
       };
     };
-    Views: { [_ in never]: never };
+    Views: {
+      public_hosts: {
+        Row: {
+          company_name: string | null;
+          id: string | null;
+        };
+        Relationships: [];
+      };
+    };
     Functions: {
+      approve_host_application: { Args: { p_application_id: string; p_user_id: string }; Returns: string };
+      claim_stripe_event: { Args: { p_event_id: string; p_type: string; p_payload: Json }; Returns: boolean };
+      complete_stripe_event: { Args: { p_event_id: string; p_error?: string }; Returns: undefined };
       consume_rate_limit: { Args: { p_key: string; p_limit: number; p_window_seconds: number }; Returns: { allowed: boolean; hits: number; retry_after_seconds: number }[] };
       min_price_per_30min: { Args: { p_min_slots: number }; Returns: number };
+      reject_host_application: { Args: { p_application_id: string; p_reason: string }; Returns: undefined };
+      replace_availability_rules: { Args: { p_space_id: string; p_rules: Json }; Returns: undefined };
       review_identity_document: { Args: { p_document_id: string; p_approve: boolean; p_reject_reason?: string; p_request_back_side?: boolean }; Returns: undefined };
+      space_busy_periods: { Args: { p_space_id: string; p_from: string; p_to: string }; Returns: { period_start: string; period_end: string }[] };
       submit_identity_document: { Args: { p_document_type: Database["public"]["Enums"]["identity_document_type"]; p_front_path: string; p_back_path?: string }; Returns: string };
     };
     Enums: {

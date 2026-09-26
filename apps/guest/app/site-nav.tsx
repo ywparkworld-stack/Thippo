@@ -17,6 +17,7 @@ export async function SiteNav() {
         </>
       ) : (
         <>
+          <Link href="/hosts">スペースを掲載する</Link>
           <Link href="/login">ログイン</Link>
           <Link href="/signup" className="rounded-md bg-brand-600 px-3 py-1.5 text-white">
             会員登録

@@ -11,3 +11,9 @@ export function required(name: string, value: string | undefined): string {
   if (!value) throw new Error(`環境変数 ${name} が設定されていません`);
   return value;
 }
+
+/** 公開バケット（スペースの写真）のファイルの URL */
+export function publicStorageUrl(bucket: string, path: string): string {
+  const base = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+  return `${base}/storage/v1/object/public/${bucket}/${path.split("/").map(encodeURIComponent).join("/")}`;
+}

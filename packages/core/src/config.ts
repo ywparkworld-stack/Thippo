@@ -86,6 +86,25 @@ export const RATE_LIMITS = {
     perIp: { limit: 30, windowSeconds: 600 },
     perAccount: { limit: 10, windowSeconds: 600 },
   },
+  hostApplication: {
+    perIp: { limit: 5, windowSeconds: 3600 },
+    perAccount: { limit: 2, windowSeconds: 86400 },
+  },
 } as const;
 
 export type RateLimitAction = keyof typeof RATE_LIMITS;
+
+/** Stripe Connect（SPEC §2, §7。付録 D14・D15） */
+export const STRIPE_CONNECT = {
+  country: "JP",
+  currency: "jpy",
+  /** 貸出主への入金は月次。毎月この日に入金する（D15） */
+  payoutMonthlyAnchor: 23,
+} as const;
+
+/** スペースの写真（付録 D16） */
+export const SPACE_PHOTO = {
+  maxPerSpace: 5,
+  maxBytes: 10 * 1024 * 1024,
+  mimeTypes: ["image/jpeg", "image/png", "image/webp"] as const,
+} as const;
