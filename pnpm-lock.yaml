@@ -96,6 +96,9 @@ importers:
       '@thippo/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@thippo/invoice':
+        specifier: workspace:*
+        version: link:../../packages/invoice
       '@thippo/mail':
         specifier: workspace:*
         version: link:../../packages/mail

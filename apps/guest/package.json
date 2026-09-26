@@ -15,6 +15,7 @@
     "@thippo/auth": "workspace:*",
     "@thippo/core": "workspace:*",
     "@thippo/db": "workspace:*",
+    "@thippo/invoice": "workspace:*",
     "@thippo/mail": "workspace:*",
     "@thippo/payments": "workspace:*",
     "@thippo/ui": "workspace:*",

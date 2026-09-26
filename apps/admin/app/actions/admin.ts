@@ -5,7 +5,11 @@ import { z } from "zod";
 import type { FormState } from "@thippo/auth";
 import { requireAppSession } from "@thippo/auth/server";
 import { issueMonthlyStatement } from "@thippo/invoice/statements";
-import { sendBookingCancelledEmails, sendRefundCompletedEmail } from "@thippo/mail/booking-emails";
+import {
+  sendBookingCancelledEmails,
+  sendRefundCompletedEmail,
+  sendStatementIssuedEmails,
+} from "@thippo/mail/booking-emails";
 import {
   CANCEL_ERROR_MESSAGES,
   cancelBookingAndRefund,
@@ -171,6 +175,11 @@ export async function issueStatementAction(
   if (auditError) return { error: toMessage(auditError.message) };
   try {
     await issueMonthlyStatement(p.data.hostId, p.data.month);
+    const { data: summary } = await supabase.rpc("host_statement_summary", {
+      p_host_id: p.data.hostId,
+      p_month: `${p.data.month}-01`,
+    });
+    await sendStatementIssuedEmails(p.data.hostId, p.data.month, summary?.[0]?.net ?? 0);
   } catch (e) {
     return {
       error:

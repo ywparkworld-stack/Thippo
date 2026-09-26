@@ -169,3 +169,55 @@ export async function sendRefundCompletedEmail(refundId: string): Promise<void> 
     idempotencyKey: `refund.completed:${refund.id}`,
   });
 }
+
+/** 利用前日・利用開始2時間前のリマインド（SPEC §11・§12、付録 D31） */
+export async function sendBookingReminderEmail(
+  bookingId: string,
+  kind: "day_before" | "two_hours",
+): Promise<void> {
+  const { booking, line, order, guest } = await loadBooking(bookingId);
+  if (!guest) return;
+  await sendTemplatedEmail({
+    template: "bookingReminder",
+    to: guest.email,
+    userId: order.guest_id,
+    data: { name: guest.display_name ?? "お客", orderNumber: order.order_number, line, kind },
+    idempotencyKey: `booking.reminder.${kind}:${booking.id}`,
+  });
+}
+
+/** 月次明細の発行のお知らせ（貸出主のすべての担当者へ） */
+export async function sendStatementIssuedEmails(
+  hostId: string,
+  month: string,
+  net: number,
+): Promise<void> {
+  const service = createSupabaseServiceClient();
+  const { data: host } = await service
+    .from("hosts")
+    .select("company_name")
+    .eq("id", hostId)
+    .single();
+  const { data: members } = await service
+    .from("host_members")
+    .select("profiles(email)")
+    .eq("host_id", hostId);
+  const [y, m] = month.split("-");
+  const hostUrl = (process.env.NEXT_PUBLIC_HOST_URL ?? "").replace(/\/+$/, "");
+  for (const email of (members ?? [])
+    .map((x) => (x.profiles as { email: string } | null)?.email)
+    .filter(Boolean) as string[]) {
+    await sendTemplatedEmail({
+      template: "monthlyStatementIssued",
+      to: email,
+      userId: null,
+      data: {
+        companyName: host?.company_name ?? "",
+        month: `${y}年${Number(m)}月`,
+        net: yen(net),
+        hostUrl,
+      },
+      idempotencyKey: `statement.issued:${hostId}:${month}:${email}`,
+    });
+  }
+}

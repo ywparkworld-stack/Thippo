@@ -90,6 +90,10 @@ export const RATE_LIMITS = {
     perIp: { limit: 5, windowSeconds: 3600 },
     perAccount: { limit: 2, windowSeconds: 86400 },
   },
+  contact: {
+    perIp: { limit: 10, windowSeconds: 3600 },
+    perAccount: { limit: 5, windowSeconds: 3600 },
+  },
 } as const;
 
 export type RateLimitAction = keyof typeof RATE_LIMITS;

@@ -1,13 +1,27 @@
-import { Card } from "@thippo/ui";
+import { StaticPage } from "../_components/static-page";
 
 export const metadata = { title: "プライバシーポリシー｜thippo" };
 
-// TODO(要確認): 本文は運営が用意する（SPEC §16）。フェーズ10で静的ページとして整える。
-export default function Page() {
+// TODO(要確認): プライバシーポリシーの本文（SPEC §16）。以下は構成の例。
+export default function PrivacyPage() {
   return (
-    <Card className="space-y-3">
-      <h1 className="text-xl font-bold">プライバシーポリシー</h1>
-      <p className="text-sm text-zinc-600">本文は準備中です。</p>
-    </Card>
+    <StaticPage title="プライバシーポリシー">
+      <h2>取得する情報</h2>
+      <p>
+        お名前、メールアドレス、電話番号、本人確認書類の画像、予約とお支払いの記録などを取得します。カード番号は決済代行会社（Stripe）が管理し、運営は保存しません。
+      </p>
+      <h2>利用目的</h2>
+      <p>
+        本人確認、予約の受付と連絡、料金の受領と返金、不正利用の防止、お問い合わせへの対応に利用します。
+      </p>
+      <h2>第三者への提供</h2>
+      <p>
+        予約の内容のうち必要な範囲（お名前など）を貸出主に提供します。法令に基づく場合を除き、それ以外の第三者には提供しません。
+      </p>
+      <h2>本人確認書類の保存期間</h2>
+      <p>退会後、法令で定められた期間を過ぎた書類は削除します。（期間は運営が定めます）</p>
+      <h2>お問い合わせ窓口</h2>
+      <p>お問い合わせフォームからご連絡ください。</p>
+    </StaticPage>
   );
 }

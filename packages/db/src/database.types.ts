@@ -111,6 +111,8 @@ export type Database = {
           order_id: string;
           period: string;
           price_per_30min: number;
+          reminder_2h_sent_at: string | null;
+          reminder_day_before_sent_at: string | null;
           slots: number;
           space_id: string;
           status: Database["public"]["Enums"]["booking_status"];
@@ -130,6 +132,8 @@ export type Database = {
           order_id: string;
           period: string;
           price_per_30min: number;
+          reminder_2h_sent_at?: string | null;
+          reminder_day_before_sent_at?: string | null;
           slots: number;
           space_id: string;
           status?: Database["public"]["Enums"]["booking_status"];
@@ -149,6 +153,8 @@ export type Database = {
           order_id?: string;
           period?: string;
           price_per_30min?: number;
+          reminder_2h_sent_at?: string | null;
+          reminder_day_before_sent_at?: string | null;
           slots?: number;
           space_id?: string;
           status?: Database["public"]["Enums"]["booking_status"];
@@ -252,6 +258,38 @@ export type Database = {
         };
         Relationships: [
           { foreignKeyName: "closures_space_id_fkey"; columns: ["space_id"]; isOneToOne: false; referencedRelation: "spaces"; referencedColumns: ["id"] },
+        ];
+      };
+      contact_messages: {
+        Row: {
+          body: string;
+          category: string;
+          created_at: string;
+          email: string;
+          id: string;
+          name: string;
+          user_id: string | null;
+        };
+        Insert: {
+          body: string;
+          category: string;
+          created_at?: string;
+          email: string;
+          id?: string;
+          name: string;
+          user_id?: string | null;
+        };
+        Update: {
+          body?: string;
+          category?: string;
+          created_at?: string;
+          email?: string;
+          id?: string;
+          name?: string;
+          user_id?: string | null;
+        };
+        Relationships: [
+          { foreignKeyName: "contact_messages_user_id_fkey"; columns: ["user_id"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] },
         ];
       };
       host_applications: {
@@ -837,8 +875,11 @@ export type Database = {
       admin_set_space_suspended: { Args: { p_space_id: string; p_suspended: boolean; p_reason: string }; Returns: undefined };
       approve_host_application: { Args: { p_application_id: string; p_user_id: string }; Returns: string };
       cancel_booking: { Args: { p_booking_id: string; p_actor: Database["public"]["Enums"]["cancel_actor"]; p_actor_id: string; p_reason?: string }; Returns: { refund_id: string; policy: Database["public"]["Enums"]["cancel_policy"]; refund_amount: number; transfer_reversal_amount: number; nth_cancel_in_window: number; stripe_charge_id: string; stripe_transfer_id: string }[] };
+      claim_day_before_reminders: { Args: { p_date: string; p_limit?: number }; Returns: { booking_id: string }[] };
       claim_stripe_event: { Args: { p_event_id: string; p_type: string; p_payload: Json }; Returns: boolean };
+      claim_two_hour_reminders: { Args: { p_limit?: number }; Returns: { booking_id: string }[] };
       close_pending_order: { Args: { p_order_id: string; p_status: Database["public"]["Enums"]["order_status"] }; Returns: string };
+      complete_finished_bookings: { Args: never; Returns: number };
       complete_stripe_event: { Args: { p_event_id: string; p_error?: string }; Returns: undefined };
       consume_rate_limit: { Args: { p_key: string; p_limit: number; p_window_seconds: number }; Returns: { allowed: boolean; hits: number; retry_after_seconds: number }[] };
       create_order_from_cart: { Args: { p_guest_id: string }; Returns: { order_id: string; order_number: string; total: number; application_fee_amount: number; host_stripe_account_id: string }[] };
@@ -847,10 +888,14 @@ export type Database = {
       host_member_list: { Args: never; Returns: { user_id: string; display_name: string; email: string; created_at: string }[] };
       host_statement_lines: { Args: { p_host_id: string; p_month: string }; Returns: { occurred_at: string; kind: string; booking_id: string; order_number: string; space_name: string; gross: number; platform_fee_excl_tax: number; platform_fee_tax: number; stripe_fee: number; net: number }[] };
       host_statement_summary: { Args: { p_host_id: string; p_month: string }; Returns: { gross: number; platform_fee_excl_tax: number; platform_fee_tax: number; stripe_fee: number; net: number }[] };
+      identity_documents_due_for_purge: { Args: { p_retention_days: number; p_limit?: number }; Returns: { document_id: string; front_path: string; back_path: string }[] };
       issue_monthly_statement: { Args: { p_host_id: string; p_month: string; p_pdf_path: string; p_document_number: string }; Returns: string };
+      mark_identity_documents_purged: { Args: { p_document_ids: string[] }; Returns: undefined };
       mark_order_paid: { Args: { p_order_id: string; p_payment_intent_id: string; p_amount: number; p_charge_id: string; p_transfer_id: string }; Returns: string };
       mark_refund_succeeded: { Args: { p_refund_id: string; p_stripe_refund_id: string }; Returns: boolean };
       min_price_per_30min: { Args: { p_min_slots: number }; Returns: number };
+      orphan_identity_files: { Args: { p_older_than?: unknown; p_limit?: number }; Returns: { name: string }[] };
+      purge_rate_limit_counters: { Args: never; Returns: number };
       recent_guest_cancel_count: { Args: { p_guest_id: string }; Returns: number };
       record_late_payment_refund: { Args: { p_order_id: string; p_refund_id: string }; Returns: undefined };
       record_no_show: { Args: { p_booking_id: string }; Returns: undefined };
@@ -860,6 +905,7 @@ export type Database = {
       review_identity_document: { Args: { p_document_id: string; p_approve: boolean; p_reject_reason?: string; p_request_back_side?: boolean }; Returns: undefined };
       search_spaces: { Args: { p_keyword?: string; p_min_capacity?: number; p_limit?: number }; Returns: { id: string; host_id: string; company_name: string; name: string; area: string; address: string; capacity: number; price_per_30min: number; min_slots: number; cover_path: string }[] };
       set_order_payment_intent: { Args: { p_order_id: string; p_payment_intent_id: string }; Returns: undefined };
+      set_order_stripe_fee_actual: { Args: { p_order_id: string; p_fee: number }; Returns: undefined };
       space_busy_periods: { Args: { p_space_id: string; p_from: string; p_to: string }; Returns: { period_start: string; period_end: string }[] };
       spaces_busy_periods: { Args: { p_space_ids: string[]; p_from: string; p_to: string }; Returns: { space_id: string; period_start: string; period_end: string }[] };
       submit_identity_document: { Args: { p_document_type: Database["public"]["Enums"]["identity_document_type"]; p_front_path: string; p_back_path?: string }; Returns: string };

@@ -287,6 +287,105 @@ ${data.amount}
       ),
     };
   },
+
+  bookingReminder(
+    ctx: TemplateContext,
+    data: {
+      name: string;
+      orderNumber: string;
+      line: BookingLine;
+      kind: "day_before" | "two_hours";
+    },
+  ): Rendered {
+    const lead =
+      data.kind === "day_before"
+        ? "明日のご予約のお知らせです。"
+        : "ご予約の利用開始まで2時間を切りました。";
+    return {
+      subject: `【thippo】${data.kind === "day_before" ? "明日" : "まもなく"}ご利用のスペースのお知らせ（${data.line.spaceName}）`,
+      text: withSignature(
+        `
+${data.name} 様
+
+${lead}
+
+■ ご予約の内容（注文番号 ${data.orderNumber}）
+${formatLines([data.line])}
+
+キャンセルはマイページの予約履歴から行えます。利用開始の2時間前からは返金が半額になります。
+${ctx.guestUrl}/mypage/orders
+`,
+        ctx,
+      ),
+    };
+  },
+
+  monthlyStatementIssued(
+    ctx: TemplateContext,
+    data: { companyName: string; month: string; net: string; hostUrl: string },
+  ): Rendered {
+    return {
+      subject: `【thippo】${data.month}分の月次明細・請求書を発行しました`,
+      text: withSignature(
+        `
+${data.companyName} ご担当者様
+
+${data.month}分の月次明細と、運営手数料の請求書（適格請求書）を発行しました。
+
+■ 振込額
+${data.net}
+
+明細と請求書（PDF）は、貸出主センターの「売上・振込」からご確認いただけます。
+${data.hostUrl}/sales
+`,
+        ctx,
+      ),
+    };
+  },
+
+  contactForward(
+    ctx: TemplateContext,
+    data: {
+      id: string;
+      name: string;
+      email: string;
+      category: string;
+      body: string;
+      userId: string | null;
+    },
+  ): Rendered {
+    return {
+      subject: `【thippo お問い合わせ】${data.category}（${data.name} 様）`,
+      text: `
+お問い合わせがありました。返信は送信者のメールアドレスへ直接お送りください。
+
+受付番号：${data.id}
+お名前：${data.name}
+メールアドレス：${data.email}
+種類：${data.category}
+会員 ID：${data.userId ?? "（未ログイン）"}
+
+${data.body}
+`.trim(),
+    };
+  },
+
+  contactReceived(ctx: TemplateContext, data: { name: string; body: string }): Rendered {
+    return {
+      subject: "【thippo】お問い合わせを受け付けました",
+      text: withSignature(
+        `
+${data.name} 様
+
+お問い合わせを受け付けました。内容を確認のうえ、担当者よりご連絡いたします。
+
+■ お問い合わせの内容
+${data.body}
+`,
+        ctx,
+      ),
+    };
+  },
 } as const;
 
 export interface BookingLine {

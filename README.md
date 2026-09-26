@@ -67,6 +67,7 @@ CI では両方を実行する（`.github/workflows/ci.yml`）。
 - 認証の設定とロールの考え方：[docs/auth.md](docs/auth.md)
 - 運営管理のアクセス制限・admin ロールの付与：[docs/admin-access.md](docs/admin-access.md)
 - Stripe の設定と Webhook：[docs/stripe.md](docs/stripe.md)
+- 定期実行とメール：[docs/operations.md](docs/operations.md)
 
 ローカルで運営管理を開くときは、admin アプリの `.env.local` に `APP_ENV=development` と `ADMIN_ACCESS_GATE=none` を設定する。
 
