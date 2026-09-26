@@ -184,7 +184,9 @@ async function main() {
       outs.length > 0
         ? `{ ${outs.map((p) => `${p.parameter_name}: ${tsType(p.udt_name!, enums)}`).join("; ")} }[]`
         : tsType(params[0]!.routine_udt, enums);
-    out.push(`      ${name}: { Args: { ${args.join("; ")} }; Returns: ${ret} };`);
+    out.push(
+      `      ${name}: { Args: ${args.length ? `{ ${args.join("; ")} }` : "never"}; Returns: ${ret} };`,
+    );
   }
   out.push("    };");
   out.push("    Enums: {");

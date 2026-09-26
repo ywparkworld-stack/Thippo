@@ -9,8 +9,10 @@ export async function SiteNav() {
       {session ? (
         <>
           <Link href="/">ダッシュボード</Link>
+          <Link href="/bookings">予約</Link>
           <Link href="/spaces">スペース</Link>
-          <Link href="/onboarding">会社情報・入金先</Link>
+          <Link href="/sales">売上・振込</Link>
+          <Link href="/account">アカウント</Link>
           <form action={signOutAction}>
             <button type="submit" className="text-zinc-600 underline">
               ログアウト

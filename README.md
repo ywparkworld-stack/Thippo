@@ -15,7 +15,8 @@ packages/
   db/            Supabase の型定義とクライアント生成
   auth/          3アプリ共通の認証（proxy・ログイン・2段階認証・レート制限・操作ログ）
   mail/          メールの文面（templates.ts に集約）と送信（Resend）
-  payments/      Stripe（Connect・Webhook の署名検証と重複処理の防止）
+  payments/      Stripe（Connect・決済・返金・Webhook の署名検証と重複処理の防止）
+  invoice/       月次明細・請求書（適格請求書）の PDF
   ui/            共通の UI コンポーネント
   eslint-config/ ESLint の共通設定
   next-config/   Next.js の共通設定
