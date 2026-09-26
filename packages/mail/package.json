@@ -6,7 +6,8 @@
   "exports": {
     ".": "./src/index.ts",
     "./templates": "./src/templates.ts",
-    "./send": "./src/send.ts"
+    "./send": "./src/send.ts",
+    "./booking-emails": "./src/booking-emails.ts"
   },
   "scripts": {
     "lint": "eslint .",

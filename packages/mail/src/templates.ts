@@ -200,6 +200,93 @@ ${ctx.guestUrl}/
       ),
     };
   },
+
+  bookingCancelledGuest(
+    ctx: TemplateContext,
+    data: {
+      name: string;
+      orderNumber: string;
+      line: BookingLine;
+      byHost: boolean;
+      reason: string | null;
+      refund: string;
+    },
+  ): Rendered {
+    return {
+      subject: `【thippo】ご予約をキャンセルしました（注文番号 ${data.orderNumber}）`,
+      text: withSignature(
+        `
+${data.name} 様
+
+${data.byHost ? "誠に申し訳ございません。以下のご予約は、貸出主・運営の都合によりキャンセルとなりました。" : "以下のご予約のキャンセルを承りました。"}
+
+■ 注文番号
+${data.orderNumber}
+
+■ キャンセルした予約
+${formatLines([data.line])}
+${data.reason ? `\n■ キャンセルの理由\n${data.reason}\n` : ""}
+■ 返金額
+${data.refund}
+${data.refund === "¥0" ? "" : "返金の手続きが完了しましたら、あらためてお知らせします。"}
+`,
+        ctx,
+      ),
+    };
+  },
+
+  bookingCancelledHost(
+    ctx: TemplateContext,
+    data: {
+      companyName: string;
+      orderNumber: string;
+      line: BookingLine;
+      cancelledBy: string;
+      reason: string | null;
+    },
+  ): Rendered {
+    return {
+      subject: `【thippo】予約がキャンセルされました（注文番号 ${data.orderNumber}）`,
+      text: withSignature(
+        `
+${data.companyName} ご担当者様
+
+以下の予約がキャンセルされました（${data.cancelledBy}）。
+
+■ 注文番号
+${data.orderNumber}
+
+■ 予約の内容
+${formatLines([data.line])}
+${data.reason ? `\n■ キャンセルの理由\n${data.reason}\n` : ""}
+売上・返金の内訳は貸出主センターの売上・振込からご確認ください。
+`,
+        ctx,
+      ),
+    };
+  },
+
+  refundCompleted(
+    ctx: TemplateContext,
+    data: { name: string; orderNumber: string; spaceName: string; amount: string },
+  ): Rendered {
+    return {
+      subject: `【thippo】返金が完了しました（注文番号 ${data.orderNumber}）`,
+      text: withSignature(
+        `
+${data.name} 様
+
+キャンセルされたご予約（${data.spaceName}）の返金の手続きが完了しました。
+
+■ 返金額
+${data.amount}
+
+カード会社によっては、ご利用明細への反映まで時間がかかる場合があります。
+`,
+        ctx,
+      ),
+    };
+  },
 } as const;
 
 export interface BookingLine {

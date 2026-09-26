@@ -42,3 +42,14 @@ stripe listen --forward-connect-to localhost:3000/api/webhooks/stripe-connect
    注文完了画面でも PaymentIntent の状態を確かめ、Webhook より先に戻ってきた場合も確定させる（同じ処理なので二重にはならない）。
 4. 15分以上 pending の注文は `/api/cron/expire-orders`（`CRON_SECRET` が必要）で expired にし、PaymentIntent を取り消す。
    それでも期限切れのあとに支払いが成功した場合は、自動で全額返金して利用者に知らせる（付録 D8）。
+
+## キャンセルと返金（SPEC §8・§8.1）
+
+1. DB 関数 `cancel_booking` が、利用者単位の advisory lock を取ったうえで、過去24時間のキャンセル回数の確認・返金区分の判定・
+   キャンセルの記録（予約を cancelled にして枠を解放、`cancel_events`・`refunds` の作成）を1つのトランザクションで行う。
+2. 返金額が0円でなければ、Stripe で返金と差し戻しを行う（比例配分に任せず金額を明示する）。
+   - 返金：`refunds.create`（`amount` = 返金額、`reverse_transfer: false`、`refund_application_fee: false`、`metadata.refund_id`）
+   - 差し戻し：`transfers.createReversal`（全額返金は「利用料金 − application fee」、半額返金は「返金額 − 110 × hours」）
+3. `charge.refunded` を受け取ったら、Stripe の返金が成功していて差し戻しも済んだものを `refunds.status = succeeded` にし、返金完了のメールを送る。
+4. Stripe の処理が失敗したら `refunds.status = failed`（理由を `failure_reason` に残す）。運営管理から再実行する（フェーズ9で画面を作る）。
+   再実行のときは、`metadata.refund_id` で Stripe 側に同じ返金・差し戻しがないかを探してから作るので、二重には返金しない。

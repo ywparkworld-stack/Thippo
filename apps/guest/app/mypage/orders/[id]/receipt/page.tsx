@@ -33,8 +33,9 @@ export default async function ReceiptPage(props: PageProps<"/mypage/orders/[id]/
     address: process.env.OPERATOR_ADDRESS ?? "（運営会社の住所）",
     registrationNumber: process.env.OPERATOR_INVOICE_REGISTRATION_NUMBER ?? "（登録番号）",
   };
-  // 返金の差し引きはフェーズ7で反映する
+  // 金額は支払額のまま表示し、返金は別に記載する（付録 D23）
   const amount = order.total;
+  const refunds = order.bookings.filter((b) => b.refund && b.refund.refund_amount > 0);
   const tax = includedConsumptionTax(amount);
   const time = (iso: string) => minutesToTime(toTokyoMinutes(new Date(iso)));
 
@@ -82,10 +83,26 @@ export default async function ReceiptPage(props: PageProps<"/mypage/orders/[id]/
         <dt>うち消費税</dt>
         <dd className="text-right">{formatYen(tax)}</dd>
       </dl>
+      {refunds.length > 0 && (
+        <div className="space-y-1 text-sm">
+          <p className="font-bold">返金</p>
+          {refunds.map((b) => (
+            <p key={b.id}>
+              {b.space?.name}（キャンセル）：{formatYen(b.refund!.refund_amount)}
+              {b.refund!.status === "succeeded" && b.refund!.completed_at
+                ? `　返金日 ${toTokyoDate(new Date(b.refund!.completed_at)).replaceAll("-", "/")}`
+                : "　返金手続き中"}
+            </p>
+          ))}
+        </div>
+      )}
       <div className="space-y-1 border-t pt-4 text-sm">
         <p className="font-bold">{issuer.name}</p>
         <p>{issuer.address}</p>
         <p>登録番号：{issuer.registrationNumber}</p>
+        <p className="text-xs text-zinc-600">
+          上記金額は、{order.companyName}（貸出主）に代わって受領しました（代理受領）。
+        </p>
       </div>
       <PrintButton />
     </div>

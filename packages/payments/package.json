@@ -6,7 +6,8 @@
   "exports": {
     ".": "./src/index.ts",
     "./server": "./src/server.ts",
-    "./checkout": "./src/checkout.ts"
+    "./checkout": "./src/checkout.ts",
+    "./refunds": "./src/refunds.ts"
   },
   "scripts": {
     "lint": "eslint .",

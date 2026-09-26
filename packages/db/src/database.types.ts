@@ -642,6 +642,7 @@ export type Database = {
         Row: {
           attempts: number;
           booking_id: string;
+          completed_at: string | null;
           created_at: string;
           created_by: string | null;
           failure_reason: string | null;
@@ -650,6 +651,7 @@ export type Database = {
           platform_fee_tax: number;
           policy: Database["public"]["Enums"]["cancel_policy"];
           refund_amount: number;
+          reversal_attempted_at: string | null;
           status: Database["public"]["Enums"]["refund_status"];
           stripe_refund_id: string | null;
           stripe_transfer_reversal_id: string | null;
@@ -659,6 +661,7 @@ export type Database = {
         Insert: {
           attempts?: number;
           booking_id: string;
+          completed_at?: string | null;
           created_at?: string;
           created_by?: string | null;
           failure_reason?: string | null;
@@ -667,6 +670,7 @@ export type Database = {
           platform_fee_tax: number;
           policy: Database["public"]["Enums"]["cancel_policy"];
           refund_amount: number;
+          reversal_attempted_at?: string | null;
           status?: Database["public"]["Enums"]["refund_status"];
           stripe_refund_id?: string | null;
           stripe_transfer_reversal_id?: string | null;
@@ -676,6 +680,7 @@ export type Database = {
         Update: {
           attempts?: number;
           booking_id?: string;
+          completed_at?: string | null;
           created_at?: string;
           created_by?: string | null;
           failure_reason?: string | null;
@@ -684,6 +689,7 @@ export type Database = {
           platform_fee_tax?: number;
           policy?: Database["public"]["Enums"]["cancel_policy"];
           refund_amount?: number;
+          reversal_attempted_at?: string | null;
           status?: Database["public"]["Enums"]["refund_status"];
           stripe_refund_id?: string | null;
           stripe_transfer_reversal_id?: string | null;
@@ -819,6 +825,7 @@ export type Database = {
     };
     Functions: {
       approve_host_application: { Args: { p_application_id: string; p_user_id: string }; Returns: string };
+      cancel_booking: { Args: { p_booking_id: string; p_actor: Database["public"]["Enums"]["cancel_actor"]; p_actor_id: string; p_reason?: string }; Returns: { refund_id: string; policy: Database["public"]["Enums"]["cancel_policy"]; refund_amount: number; transfer_reversal_amount: number; nth_cancel_in_window: number; stripe_charge_id: string; stripe_transfer_id: string }[] };
       claim_stripe_event: { Args: { p_event_id: string; p_type: string; p_payload: Json }; Returns: boolean };
       close_pending_order: { Args: { p_order_id: string; p_status: Database["public"]["Enums"]["order_status"] }; Returns: string };
       complete_stripe_event: { Args: { p_event_id: string; p_error?: string }; Returns: undefined };
@@ -826,8 +833,11 @@ export type Database = {
       create_order_from_cart: { Args: { p_guest_id: string }; Returns: { order_id: string; order_number: string; total: number; application_fee_amount: number; host_stripe_account_id: string }[] };
       expire_due_orders: { Args: { p_limit?: number }; Returns: { order_id: string; payment_intent_id: string }[] };
       mark_order_paid: { Args: { p_order_id: string; p_payment_intent_id: string; p_amount: number; p_charge_id: string; p_transfer_id: string }; Returns: string };
+      mark_refund_succeeded: { Args: { p_refund_id: string; p_stripe_refund_id: string }; Returns: boolean };
       min_price_per_30min: { Args: { p_min_slots: number }; Returns: number };
+      recent_guest_cancel_count: { Args: { p_guest_id: string }; Returns: number };
       record_late_payment_refund: { Args: { p_order_id: string; p_refund_id: string }; Returns: undefined };
+      record_refund_progress: { Args: { p_refund_id: string; p_stripe_refund_id: string; p_stripe_transfer_reversal_id: string; p_error?: string }; Returns: undefined };
       reject_host_application: { Args: { p_application_id: string; p_reason: string }; Returns: undefined };
       replace_availability_rules: { Args: { p_space_id: string; p_rules: Json }; Returns: undefined };
       review_identity_document: { Args: { p_document_id: string; p_approve: boolean; p_reject_reason?: string; p_request_back_side?: boolean }; Returns: undefined };

@@ -31,7 +31,9 @@ export async function loadOwnOrder(supabase: ServerSupabase, orderId: string) {
   if (!order) return null;
   const { data: bookings } = await supabase
     .from("bookings")
-    .select("id, period, slots, total, status, spaces(id, name, address)")
+    .select(
+      "id, period, slots, total, status, cancelled_by, spaces(id, name, address), refunds(refund_amount, status, completed_at)",
+    )
     .eq("order_id", orderId)
     .order("period");
   return {
@@ -41,6 +43,12 @@ export async function loadOwnOrder(supabase: ServerSupabase, orderId: string) {
       ...b,
       ...parseTstzRange(b.period),
       space: b.spaces as { id: string; name: string; address: string } | null,
+      refund:
+        (b.refunds as unknown as {
+          refund_amount: number;
+          status: "pending" | "succeeded" | "failed";
+          completed_at: string | null;
+        } | null) ?? null,
     })),
   };
 }
