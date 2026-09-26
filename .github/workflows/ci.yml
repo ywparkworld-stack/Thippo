@@ -27,7 +27,7 @@ jobs:
       - run: pnpm format:check
       - run: pnpm lint
       - run: pnpm typecheck
-      - run: pnpm --filter @thippo/core test
+      - run: pnpm test:unit
       - run: pnpm build
 
   db:

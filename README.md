@@ -13,6 +13,7 @@ apps/
 packages/
   core/          料金計算・返金判定・下限料金・枠の計算（純粋関数）と設定値
   db/            Supabase の型定義とクライアント生成
+  auth/          3アプリ共通の認証（proxy・ログイン・2段階認証・レート制限・操作ログ）
   ui/            共通の UI コンポーネント
   eslint-config/ ESLint の共通設定
   next-config/   Next.js の共通設定
@@ -57,6 +58,13 @@ CI では両方を実行する（`.github/workflows/ci.yml`）。
 - 料金・手数料の計算は `packages/core` と DB 関数（`private.calc_booking_fees` など）の 2 か所にあり、
   テストで一致を確かめている。設定値を変えるときは `packages/core/src/config.ts` と
   `supabase/migrations/*_pricing.sql` の `private.pricing_config()` を両方変える。
+
+## 認証と運営管理
+
+- 認証の設定とロールの考え方：[docs/auth.md](docs/auth.md)
+- 運営管理のアクセス制限・admin ロールの付与：[docs/admin-access.md](docs/admin-access.md)
+
+ローカルで運営管理を開くときは、admin アプリの `.env.local` に `APP_ENV=development` と `ADMIN_ACCESS_GATE=none` を設定する。
 
 ## 環境変数
 

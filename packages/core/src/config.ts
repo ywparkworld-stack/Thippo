@@ -53,3 +53,39 @@ export const IDENTITY = {
 export const TIME_ZONE = "Asia/Tokyo";
 /** Asia/Tokyo は 1951 年以降夏時間がないため、固定オフセットで扱う。 */
 export const TOKYO_UTC_OFFSET_MINUTES = 9 * 60;
+
+export const AUTH = {
+  /** パスワードの最小文字数（Supabase Auth の minimum_password_length と揃える） */
+  minPasswordLength: 10,
+  /** bcrypt が扱える上限（UTF-8 で 72 バイト） */
+  maxPasswordBytes: 72,
+} as const;
+
+/**
+ * レート制限（SPEC §3.3）。Postgres の固定窓カウンターで数える（付録 D5）。
+ * 同じ操作を IP アドレス単位とメールアドレス（または利用者）単位の両方で数える。
+ */
+export const RATE_LIMITS = {
+  login: {
+    perIp: { limit: 20, windowSeconds: 600 },
+    perAccount: { limit: 10, windowSeconds: 600 },
+  },
+  signup: {
+    perIp: { limit: 5, windowSeconds: 3600 },
+    perAccount: { limit: 3, windowSeconds: 3600 },
+  },
+  passwordReset: {
+    perIp: { limit: 5, windowSeconds: 3600 },
+    perAccount: { limit: 3, windowSeconds: 3600 },
+  },
+  mfaVerify: {
+    perIp: { limit: 20, windowSeconds: 600 },
+    perAccount: { limit: 10, windowSeconds: 600 },
+  },
+  cancel: {
+    perIp: { limit: 30, windowSeconds: 600 },
+    perAccount: { limit: 10, windowSeconds: 600 },
+  },
+} as const;
+
+export type RateLimitAction = keyof typeof RATE_LIMITS;

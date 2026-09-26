@@ -742,6 +742,7 @@ export type Database = {
     };
     Views: { [_ in never]: never };
     Functions: {
+      consume_rate_limit: { Args: { p_key: string; p_limit: number; p_window_seconds: number }; Returns: { allowed: boolean; hits: number; retry_after_seconds: number }[] };
       min_price_per_30min: { Args: { p_min_slots: number }; Returns: number };
     };
     Enums: {

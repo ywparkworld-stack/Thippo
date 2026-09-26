@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { PageShell } from "@thippo/ui";
+import { SiteNav } from "./site-nav";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -12,7 +13,9 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="ja" className="h-full antialiased">
       <body className="min-h-full">
-        <PageShell siteName="thippo 運営管理">{children}</PageShell>
+        <PageShell siteName="thippo 運営管理" nav={<SiteNav />}>
+          {children}
+        </PageShell>
       </body>
     </html>
   );

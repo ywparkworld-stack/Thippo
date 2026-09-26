@@ -60,11 +60,23 @@ async function main() {
       where c.table_schema = 'public' and t.table_type = 'BASE TABLE'
       order by c.table_name, c.column_name`)
   ).rows;
-  const fns = (
-    await client.query<{ name: string; args: string; ret: string }>(`
-      select p.proname as name, pg_get_function_arguments(p.oid) as args, format_type(p.prorettype, null) as ret
-      from pg_proc p join pg_namespace n on n.oid = p.pronamespace
-      where n.nspname = 'public' order by p.proname`)
+  const fnParams = (
+    await client.query<{
+      routine_name: string;
+      specific_name: string;
+      parameter_mode: "IN" | "OUT" | "INOUT" | null;
+      parameter_name: string | null;
+      udt_name: string | null;
+      ordinal_position: number | null;
+      routine_udt: string;
+    }>(`
+      select r.routine_name, r.specific_name, p.parameter_mode, p.parameter_name, p.udt_name,
+             p.ordinal_position, r.type_udt_name as routine_udt
+      from information_schema.routines r
+      left join information_schema.parameters p
+        on p.specific_schema = r.specific_schema and p.specific_name = r.specific_name
+      where r.routine_schema = 'public' and r.routine_type = 'FUNCTION'
+      order by r.routine_name, p.ordinal_position`)
   ).rows;
   await client.end();
 
@@ -104,24 +116,17 @@ async function main() {
   out.push("    };");
   out.push("    Views: { [_ in never]: never };");
   out.push("    Functions: {");
-  for (const f of fns) {
-    const args = f.args
-      .split(",")
-      .map((a) => a.trim())
-      .filter(Boolean)
-      .map((a) => {
-        const [name, type] = a.split(/\s+/);
-        return `${name}: ${tsType(type === "integer" ? "int4" : type === "uuid" ? "uuid" : "text", enums)}`;
-      });
+  const byFn = new Map<string, typeof fnParams>();
+  for (const r of fnParams) byFn.set(r.routine_name, [...(byFn.get(r.routine_name) ?? []), r]);
+  for (const [name, params] of byFn) {
+    const ins = params.filter((p) => p.parameter_mode === "IN" && p.parameter_name);
+    const outs = params.filter((p) => p.parameter_mode === "OUT" && p.parameter_name);
+    const args = ins.map((p) => `${p.parameter_name}: ${tsType(p.udt_name!, enums)}`);
     const ret =
-      f.ret === "integer"
-        ? "number"
-        : f.ret === "boolean"
-          ? "boolean"
-          : f.ret === "uuid"
-            ? "string"
-            : "unknown";
-    out.push(`      ${f.name}: { Args: { ${args.join("; ")} }; Returns: ${ret} };`);
+      outs.length > 0
+        ? `{ ${outs.map((p) => `${p.parameter_name}: ${tsType(p.udt_name!, enums)}`).join("; ")} }[]`
+        : tsType(params[0]!.routine_udt, enums);
+    out.push(`      ${name}: { Args: { ${args.join("; ")} }; Returns: ${ret} };`);
   }
   out.push("    };");
   out.push("    Enums: {");

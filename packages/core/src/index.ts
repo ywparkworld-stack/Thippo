@@ -6,3 +6,4 @@ export * from "./minimum-price";
 export * from "./time";
 export * from "./slots";
 export * from "./cart";
+export * from "./validation/auth";

@@ -15,7 +15,8 @@
     "test": "pnpm -r --workspace-concurrency=1 test",
     "test:db": "pnpm --filter @thippo/supabase test",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "test:unit": "pnpm --filter './packages/*' test"
   },
   "devDependencies": {
     "prettier": "^3.6.2",

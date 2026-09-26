@@ -17,6 +17,9 @@ importers:
 
   apps/admin:
     dependencies:
+      '@thippo/auth':
+        specifier: workspace:*
+        version: link:../../packages/auth
       '@thippo/core':
         specifier: workspace:*
         version: link:../../packages/core
@@ -66,6 +69,9 @@ importers:
 
   apps/guest:
     dependencies:
+      '@thippo/auth':
+        specifier: workspace:*
+        version: link:../../packages/auth
       '@thippo/core':
         specifier: workspace:*
         version: link:../../packages/core
@@ -115,6 +121,9 @@ importers:
 
   apps/host:
     dependencies:
+      '@thippo/auth':
+        specifier: workspace:*
+        version: link:../../packages/auth
       '@thippo/core':
         specifier: workspace:*
         version: link:../../packages/core
@@ -162,7 +171,66 @@ importers:
         specifier: ^5.9.3
         version: 5.9.3
 
+  packages/auth:
+    dependencies:
+      '@supabase/ssr':
+        specifier: ^0.7.0
+        version: 0.7.0(@supabase/supabase-js@2.117.1)
+      '@supabase/supabase-js':
+        specifier: ^2.81.1
+        version: 2.117.1
+      '@thippo/core':
+        specifier: workspace:*
+        version: link:../core
+      '@thippo/db':
+        specifier: workspace:*
+        version: link:../db
+      '@thippo/ui':
+        specifier: workspace:*
+        version: link:../ui
+      jose:
+        specifier: ^6.2.12
+        version: 6.2.12
+      react:
+        specifier: 19.2.4
+        version: 19.2.4
+      react-dom:
+        specifier: 19.2.4
+        version: 19.2.4(react@19.2.4)
+      server-only:
+        specifier: ^0.0.1
+        version: 0.0.1
+    devDependencies:
+      '@thippo/eslint-config':
+        specifier: workspace:*
+        version: link:../eslint-config
+      '@types/node':
+        specifier: ^22.19.1
+        version: 22.20.4
+      '@types/react':
+        specifier: ^19
+        version: 19.3.0
+      '@types/react-dom':
+        specifier: ^19
+        version: 19.3.0(@types/react@19.3.0)
+      eslint:
+        specifier: ^9.39.1
+        version: 9.39.5(jiti@2.7.0)
+      next:
+        specifier: 16.2.7
+        version: 16.2.7(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.7(@types/node@22.20.4)(jiti@2.7.0)(lightningcss@1.32.0)
+
   packages/core:
+    dependencies:
+      zod:
+        specifier: ^4.6.5
+        version: 4.6.5
     devDependencies:
       '@thippo/eslint-config':
         specifier: workspace:*
@@ -240,12 +308,18 @@ importers:
       '@types/react':
         specifier: ^19
         version: 19.3.0
+      '@types/react-dom':
+        specifier: ^19.3.0
+        version: 19.3.0(@types/react@19.3.0)
       eslint:
         specifier: ^9.39.1
         version: 9.39.5(jiti@2.7.0)
       react:
         specifier: 19.2.4
         version: 19.2.4
+      react-dom:
+        specifier: 19.2.4
+        version: 19.2.4(react@19.2.4)
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -2055,6 +2129,9 @@ packages:
   jiti@2.7.0:
     resolution: {integrity: sha512-AC/7JofJvZGrrneWNaEnJeOLUx+JlGt7tNa0wZiRPT4MY1wmfKjt2+6O2p2uz2+skll8OZZmJMNqeke7kKbNgQ==}
     hasBin: true
+
+  jose@6.2.12:
+    resolution: {integrity: sha512-9NiFmJEex0sy2Dk58j2UGBSHgUs2ypF9eZSu4L6vjOX3Dp96Sw1F3uL+H+D1sx02jZZdzUT0HgvCy59CuvXcWw==}
 
   js-tokens@4.0.0:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
@@ -4603,6 +4680,8 @@ snapshots:
       set-function-name: 2.0.2
 
   jiti@2.7.0: {}
+
+  jose@6.2.12: {}
 
   js-tokens@4.0.0: {}
 
