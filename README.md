@@ -17,6 +17,8 @@ packages/
   mail/          メールの文面（templates.ts に集約）と送信（Resend）
   payments/      Stripe（Connect・決済・返金・Webhook の署名検証と重複処理の防止）
   invoice/       月次明細・請求書（適格請求書）の PDF
+  observability/ Sentry の共通設定（個人情報を送らない）
+e2e/             E2E テスト（Playwright）
   ui/            共通の UI コンポーネント
   eslint-config/ ESLint の共通設定
   next-config/   Next.js の共通設定
@@ -68,6 +70,9 @@ CI では両方を実行する（`.github/workflows/ci.yml`）。
 - 運営管理のアクセス制限・admin ロールの付与：[docs/admin-access.md](docs/admin-access.md)
 - Stripe の設定と Webhook：[docs/stripe.md](docs/stripe.md)
 - 定期実行とメール：[docs/operations.md](docs/operations.md)
+- デプロイ手順：[docs/deploy.md](docs/deploy.md)
+- 本番リリースのチェックリスト：[docs/release-checklist.md](docs/release-checklist.md)
+- E2E テスト：`e2e/`（GitHub Actions の `.github/workflows/e2e.yml` で実行。Stripe のテストモードの Secrets が必要）
 
 ローカルで運営管理を開くときは、admin アプリの `.env.local` に `APP_ENV=development` と `ADMIN_ACCESS_GATE=none` を設定する。
 

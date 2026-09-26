@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { withSentryConfig } from "@sentry/nextjs/config";
 
 /** 3アプリ共通の Next.js 設定。 */
 export function baseNextConfig(extraHeaders: { key: string; value: string }[] = []): NextConfig {
@@ -9,6 +10,7 @@ export function baseNextConfig(extraHeaders: { key: string; value: string }[] = 
       "@thippo/db",
       "@thippo/invoice",
       "@thippo/mail",
+      "@thippo/observability",
       "@thippo/payments",
       "@thippo/ui",
     ],
@@ -38,4 +40,19 @@ export function baseNextConfig(extraHeaders: { key: string; value: string }[] = 
       ];
     },
   };
+}
+
+/**
+ * Sentry のビルド設定を付ける。SENTRY_AUTH_TOKEN があるとき（staging・production のビルド）だけ
+ * ソースマップを Sentry にアップロードし、公開はしない。
+ */
+export function withSentry(config: NextConfig): NextConfig {
+  return withSentryConfig(config, {
+    org: process.env.SENTRY_ORG,
+    project: process.env.SENTRY_PROJECT,
+    authToken: process.env.SENTRY_AUTH_TOKEN,
+    silent: !process.env.CI,
+    sourcemaps: { disable: !process.env.SENTRY_AUTH_TOKEN, deleteSourcemapsAfterUpload: true },
+    telemetry: false,
+  });
 }

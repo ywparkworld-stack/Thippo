@@ -1,3 +1,3 @@
-import { baseNextConfig } from "@thippo/next-config";
+import { baseNextConfig, withSentry } from "@thippo/next-config";
 
-export default baseNextConfig([{ key: "X-Frame-Options", value: "SAMEORIGIN" }]);
+export default withSentry(baseNextConfig([{ key: "X-Frame-Options", value: "SAMEORIGIN" }]));

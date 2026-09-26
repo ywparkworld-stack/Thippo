@@ -2,6 +2,7 @@ packages:
   - "apps/*"
   - "packages/*"
   - "supabase"
+  - "e2e"
 
 onlyBuiltDependencies:
   - esbuild

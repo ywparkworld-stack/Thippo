@@ -53,9 +53,13 @@ export default async function MyPage(props: PageProps<"/mypage">) {
           </Link>
         </Card>
         <Card className="space-y-2">
-          <h2 className="font-bold">パスワード</h2>
+          <h2 className="font-bold">パスワード・退会</h2>
           <Link href="/password/reset" className="text-sm text-brand-700 underline">
-            変更する
+            パスワードを変更する
+          </Link>
+          <br />
+          <Link href="/mypage/withdraw" className="text-xs text-zinc-500 underline">
+            退会する
           </Link>
         </Card>
       </div>

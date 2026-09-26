@@ -160,6 +160,9 @@ site_url = "http://localhost:3000"
 # external_url = ""
 # A list of *exact* URLs that auth providers are permitted to redirect to post authentication.
 additional_redirect_urls = [
+  "http://localhost:3000",
+  "http://localhost:3001",
+  "http://localhost:3002",
   "http://localhost:3000/**",
   "http://localhost:3001/**",
   "http://localhost:3002/**",

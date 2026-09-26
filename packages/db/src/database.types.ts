@@ -909,6 +909,7 @@ export type Database = {
       space_busy_periods: { Args: { p_space_id: string; p_from: string; p_to: string }; Returns: { period_start: string; period_end: string }[] };
       spaces_busy_periods: { Args: { p_space_ids: string[]; p_from: string; p_to: string }; Returns: { space_id: string; period_start: string; period_end: string }[] };
       submit_identity_document: { Args: { p_document_type: Database["public"]["Enums"]["identity_document_type"]; p_front_path: string; p_back_path?: string }; Returns: string };
+      withdraw_account: { Args: never; Returns: undefined };
     };
     Enums: {
       account_status: "active" | "suspended";
