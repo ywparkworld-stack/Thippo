@@ -828,6 +828,13 @@ export type Database = {
     };
     Functions: {
       add_host_member: { Args: { p_host_id: string; p_inviter_id: string; p_user_id: string }; Returns: undefined };
+      admin_cancel_monitor: { Args: { p_min_30d?: number; p_limit?: number }; Returns: { user_id: string; display_name: string; email: string; status: Database["public"]["Enums"]["account_status"]; cancels_24h: number; cancels_30d: number; last_cancel_at: string }[] };
+      admin_host_month_summaries: { Args: { p_month: string }; Returns: { host_id: string; company_name: string; gross: number; platform_fee_excl_tax: number; platform_fee_tax: number; stripe_fee: number; net: number; stripe_fee_actual: number; stripe_fee_difference: number; statement_issued_at: string }[] };
+      admin_month_summary: { Args: { p_month: string }; Returns: { booking_count: number; gross: number; platform_fee_excl_tax: number; platform_fee_tax: number; full_refund_stripe_fee: number; stripe_fee_estimated: number; stripe_fee_actual: number; stripe_fee_difference: number; net_income: number }[] };
+      admin_record_action: { Args: { p_action: string; p_target_table: string; p_target_id: string; p_payload?: Json }; Returns: number };
+      admin_set_host_status: { Args: { p_host_id: string; p_status: Database["public"]["Enums"]["host_status"]; p_reason: string }; Returns: number };
+      admin_set_profile_status: { Args: { p_user_id: string; p_status: Database["public"]["Enums"]["account_status"]; p_reason: string }; Returns: undefined };
+      admin_set_space_suspended: { Args: { p_space_id: string; p_suspended: boolean; p_reason: string }; Returns: undefined };
       approve_host_application: { Args: { p_application_id: string; p_user_id: string }; Returns: string };
       cancel_booking: { Args: { p_booking_id: string; p_actor: Database["public"]["Enums"]["cancel_actor"]; p_actor_id: string; p_reason?: string }; Returns: { refund_id: string; policy: Database["public"]["Enums"]["cancel_policy"]; refund_amount: number; transfer_reversal_amount: number; nth_cancel_in_window: number; stripe_charge_id: string; stripe_transfer_id: string }[] };
       claim_stripe_event: { Args: { p_event_id: string; p_type: string; p_payload: Json }; Returns: boolean };
