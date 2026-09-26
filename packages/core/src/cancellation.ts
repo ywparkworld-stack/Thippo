@@ -147,3 +147,13 @@ export function calcRefund(fees: BookingFees, policy: CancelPolicy): RefundBreak
     requiresStripe: refundAmount > 0,
   };
 }
+
+/** キャンセル規定の表示用の文言（SPEC §8。スペース詳細・予約カゴ・購入手続きに表示する） */
+export const CANCEL_POLICY_LINES = [
+  "利用開始の2時間前まで：全額返金",
+  "利用開始の2時間前から利用開始まで：利用料金の半額を返金（1円未満切り捨て）",
+  "利用開始後：返金なし",
+  "過去24時間以内にご自身で5回以上キャンセルしている場合、6回目以降のキャンセルは返金なし",
+  "無断キャンセル（連絡なく利用しなかった場合）：返金なし",
+  "貸出主・運営の都合によるキャンセル：全額返金",
+] as const;

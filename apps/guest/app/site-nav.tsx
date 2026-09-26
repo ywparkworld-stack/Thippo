@@ -1,11 +1,14 @@
 import Link from "next/link";
 import { createClient, loadSession } from "@thippo/auth/server";
 import { signOutAction } from "./actions/auth";
+import { CartSync } from "./_components/cart-sync";
 
 export async function SiteNav() {
   const session = await loadSession(await createClient());
   return (
     <nav className="flex items-center gap-4 text-sm">
+      <CartSync signedIn={session?.role === "guest"} />
+      <Link href="/cart">予約カゴ</Link>
       {session ? (
         <>
           <Link href="/mypage">マイページ</Link>

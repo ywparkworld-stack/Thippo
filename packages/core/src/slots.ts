@@ -139,3 +139,8 @@ export function periodFromSlotClicks(first: Slot, second: Slot): Interval {
   const [a, b] = first.start <= second.start ? [first, second] : [second, first];
   return { start: a.start, end: b.end };
 }
+
+/** その日に予約できる枠が1枠以上あるか（一覧の日付検索。付録 D17） */
+export function hasAvailableSlot(input: DaySlotsInput): boolean {
+  return computeDaySlots(input).some((s) => s.status === "available");
+}

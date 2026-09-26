@@ -817,7 +817,9 @@ export type Database = {
       reject_host_application: { Args: { p_application_id: string; p_reason: string }; Returns: undefined };
       replace_availability_rules: { Args: { p_space_id: string; p_rules: Json }; Returns: undefined };
       review_identity_document: { Args: { p_document_id: string; p_approve: boolean; p_reject_reason?: string; p_request_back_side?: boolean }; Returns: undefined };
+      search_spaces: { Args: { p_keyword?: string; p_min_capacity?: number; p_limit?: number }; Returns: { id: string; host_id: string; company_name: string; name: string; area: string; address: string; capacity: number; price_per_30min: number; min_slots: number; cover_path: string }[] };
       space_busy_periods: { Args: { p_space_id: string; p_from: string; p_to: string }; Returns: { period_start: string; period_end: string }[] };
+      spaces_busy_periods: { Args: { p_space_ids: string[]; p_from: string; p_to: string }; Returns: { space_id: string; period_start: string; period_end: string }[] };
       submit_identity_document: { Args: { p_document_type: Database["public"]["Enums"]["identity_document_type"]; p_front_path: string; p_back_path?: string }; Returns: string };
     };
     Enums: {
