@@ -26,6 +26,9 @@ importers:
       '@thippo/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@thippo/mail':
+        specifier: workspace:*
+        version: link:../../packages/mail
       '@thippo/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -293,6 +296,34 @@ importers:
       typescript-eslint:
         specifier: ^8.46.4
         version: 8.70.1(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3)
+
+  packages/mail:
+    dependencies:
+      '@thippo/core':
+        specifier: workspace:*
+        version: link:../core
+      '@thippo/db':
+        specifier: workspace:*
+        version: link:../db
+      server-only:
+        specifier: ^0.0.1
+        version: 0.0.1
+    devDependencies:
+      '@thippo/eslint-config':
+        specifier: workspace:*
+        version: link:../eslint-config
+      '@types/node':
+        specifier: ^22.19.1
+        version: 22.20.4
+      eslint:
+        specifier: ^9.39.1
+        version: 9.39.5(jiti@2.7.0)
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.7(@types/node@22.20.4)(jiti@2.7.0)(lightningcss@1.32.0)
 
   packages/next-config:
     devDependencies:

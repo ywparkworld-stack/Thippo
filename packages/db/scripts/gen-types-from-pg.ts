@@ -25,6 +25,7 @@ const scalar: Record<string, string> = {
   timestamptz: "string",
   tstzrange: "string",
   jsonb: "Json",
+  void: "undefined",
   json: "Json",
 };
 
@@ -69,14 +70,34 @@ async function main() {
       udt_name: string | null;
       ordinal_position: number | null;
       routine_udt: string;
+      parameter_default: string | null;
     }>(`
       select r.routine_name, r.specific_name, p.parameter_mode, p.parameter_name, p.udt_name,
-             p.ordinal_position, r.type_udt_name as routine_udt
+             p.ordinal_position, r.type_udt_name as routine_udt, p.parameter_default
       from information_schema.routines r
       left join information_schema.parameters p
         on p.specific_schema = r.specific_schema and p.specific_name = r.specific_name
       where r.routine_schema = 'public' and r.routine_type = 'FUNCTION'
       order by r.routine_name, p.ordinal_position`)
+  ).rows;
+  const fks = (
+    await client.query<{
+      table_name: string;
+      name: string;
+      columns: string[];
+      ref_table: string;
+      ref_columns: string[];
+      one_to_one: boolean;
+    }>(`
+      select c.conrelid::regclass::text as table_name, c.conname as name,
+        array(select a.attname from unnest(c.conkey) k join pg_attribute a on a.attrelid = c.conrelid and a.attnum = k)::text[] as columns,
+        c.confrelid::regclass::text as ref_table,
+        array(select a.attname from unnest(c.confkey) k join pg_attribute a on a.attrelid = c.confrelid and a.attnum = k)::text[] as ref_columns,
+        exists (select 1 from pg_index i where i.indrelid = c.conrelid and i.indisunique and i.indpred is null
+                and (select array_agg(x order by x) from unnest(i.indkey::int2[]) x) = (select array_agg(x order by x) from unnest(c.conkey) x)) as one_to_one
+      from pg_constraint c join pg_namespace n on n.oid = c.connamespace
+      where c.contype = 'f' and n.nspname = 'public' and c.confrelid::regclass::text not like '%.%'
+      order by 1, 2`)
   ).rows;
   await client.end();
 
@@ -110,7 +131,17 @@ async function main() {
       }
       out.push("        };");
     }
-    out.push("        Relationships: [];");
+    const rels = fks.filter((f) => f.table_name === table);
+    if (rels.length === 0) out.push("        Relationships: [];");
+    else {
+      out.push("        Relationships: [");
+      for (const f of rels) {
+        out.push(
+          `          { foreignKeyName: ${JSON.stringify(f.name)}; columns: ${JSON.stringify(f.columns)}; isOneToOne: ${f.one_to_one}; referencedRelation: ${JSON.stringify(f.ref_table)}; referencedColumns: ${JSON.stringify(f.ref_columns)} },`,
+        );
+      }
+      out.push("        ];");
+    }
     out.push("      };");
   }
   out.push("    };");
@@ -121,7 +152,10 @@ async function main() {
   for (const [name, params] of byFn) {
     const ins = params.filter((p) => p.parameter_mode === "IN" && p.parameter_name);
     const outs = params.filter((p) => p.parameter_mode === "OUT" && p.parameter_name);
-    const args = ins.map((p) => `${p.parameter_name}: ${tsType(p.udt_name!, enums)}`);
+    const args = ins.map(
+      (p) =>
+        `${p.parameter_name}${p.parameter_default === null ? "" : "?"}: ${tsType(p.udt_name!, enums)}`,
+    );
     const ret =
       outs.length > 0
         ? `{ ${outs.map((p) => `${p.parameter_name}: ${tsType(p.udt_name!, enums)}`).join("; ")} }[]`

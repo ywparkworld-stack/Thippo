@@ -41,7 +41,7 @@ beforeAll(async () => {
     ).bookingId;
     docA = uid();
     await db.query(
-      "insert into public.identity_documents (id, user_id, storage_path) values ($1, $2, $3)",
+      "insert into public.identity_documents (id, user_id, front_path, document_type) values ($1, $2, $3, 'drivers_license')",
       [docA, guestA, `${guestA}/license.jpg`],
     );
     await db.query(
@@ -98,13 +98,10 @@ describe("利用者", () => {
         "insert into storage.objects (bucket_id, name, owner) values ('identity-documents', $1, $2)",
         [`${guestA}/b.jpg`, guestB],
       );
+      // 提出は DB 関数からだけ。テーブルへの直接の insert はできない
       await expectError(
         db,
-        "insert into public.identity_documents (user_id, storage_path) values ($1, $2)",
-        [guestA, `${guestA}/c.jpg`],
-      );
-      await db.query(
-        "insert into public.identity_documents (user_id, storage_path) values ($1, $2)",
+        "insert into public.identity_documents (user_id, front_path, document_type) values ($1, $2, 'passport')",
         [guestB, `${guestB}/a.jpg`],
       );
     });

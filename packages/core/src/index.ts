@@ -7,3 +7,6 @@ export * from "./time";
 export * from "./slots";
 export * from "./cart";
 export * from "./validation/auth";
+export * from "./identity";
+export * from "./mail";
+export * from "./validation/profile";

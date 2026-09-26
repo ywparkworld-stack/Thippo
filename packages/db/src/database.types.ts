@@ -32,7 +32,9 @@ export type Database = {
           target_id?: string | null;
           target_table?: string | null;
         };
-        Relationships: [];
+        Relationships: [
+          { foreignKeyName: "audit_logs_actor_id_fkey"; columns: ["actor_id"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] },
+        ];
       };
       availability_rules: {
         Row: {
@@ -59,7 +61,9 @@ export type Database = {
           space_id?: string;
           weekday?: number;
         };
-        Relationships: [];
+        Relationships: [
+          { foreignKeyName: "availability_rules_space_id_fkey"; columns: ["space_id"]; isOneToOne: false; referencedRelation: "spaces"; referencedColumns: ["id"] },
+        ];
       };
       booking_fees: {
         Row: {
@@ -89,7 +93,9 @@ export type Database = {
           platform_fee_tax?: number;
           stripe_fee_estimated?: number;
         };
-        Relationships: [];
+        Relationships: [
+          { foreignKeyName: "booking_fees_booking_id_fkey"; columns: ["booking_id"]; isOneToOne: true; referencedRelation: "bookings"; referencedColumns: ["id"] },
+        ];
       };
       bookings: {
         Row: {
@@ -149,7 +155,10 @@ export type Database = {
           total?: number;
           updated_at?: string;
         };
-        Relationships: [];
+        Relationships: [
+          { foreignKeyName: "bookings_order_id_guest_id_host_id_fkey"; columns: ["order_id","guest_id","host_id"]; isOneToOne: false; referencedRelation: "orders"; referencedColumns: ["id","guest_id","host_id"] },
+          { foreignKeyName: "bookings_space_id_host_id_fkey"; columns: ["space_id","host_id"]; isOneToOne: false; referencedRelation: "spaces"; referencedColumns: ["id","host_id"] },
+        ];
       };
       cancel_events: {
         Row: {
@@ -170,7 +179,10 @@ export type Database = {
           id?: number;
           user_id?: string;
         };
-        Relationships: [];
+        Relationships: [
+          { foreignKeyName: "cancel_events_booking_id_fkey"; columns: ["booking_id"]; isOneToOne: true; referencedRelation: "bookings"; referencedColumns: ["id"] },
+          { foreignKeyName: "cancel_events_user_id_fkey"; columns: ["user_id"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] },
+        ];
       };
       cart_items: {
         Row: {
@@ -194,7 +206,10 @@ export type Database = {
           period?: string;
           space_id?: string;
         };
-        Relationships: [];
+        Relationships: [
+          { foreignKeyName: "cart_items_cart_id_fkey"; columns: ["cart_id"]; isOneToOne: false; referencedRelation: "carts"; referencedColumns: ["id"] },
+          { foreignKeyName: "cart_items_space_id_fkey"; columns: ["space_id"]; isOneToOne: false; referencedRelation: "spaces"; referencedColumns: ["id"] },
+        ];
       };
       carts: {
         Row: {
@@ -215,7 +230,9 @@ export type Database = {
           id?: string;
           updated_at?: string;
         };
-        Relationships: [];
+        Relationships: [
+          { foreignKeyName: "carts_guest_id_fkey"; columns: ["guest_id"]; isOneToOne: true; referencedRelation: "profiles"; referencedColumns: ["id"] },
+        ];
       };
       closures: {
         Row: {
@@ -233,7 +250,9 @@ export type Database = {
           date?: string;
           space_id?: string;
         };
-        Relationships: [];
+        Relationships: [
+          { foreignKeyName: "closures_space_id_fkey"; columns: ["space_id"]; isOneToOne: false; referencedRelation: "spaces"; referencedColumns: ["id"] },
+        ];
       };
       host_applications: {
         Row: {
@@ -284,7 +303,10 @@ export type Database = {
           status?: Database["public"]["Enums"]["review_status"];
           updated_at?: string;
         };
-        Relationships: [];
+        Relationships: [
+          { foreignKeyName: "host_applications_host_fk"; columns: ["host_id"]; isOneToOne: false; referencedRelation: "hosts"; referencedColumns: ["id"] },
+          { foreignKeyName: "host_applications_reviewed_by_fkey"; columns: ["reviewed_by"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] },
+        ];
       };
       host_members: {
         Row: {
@@ -302,7 +324,10 @@ export type Database = {
           host_id?: string;
           user_id?: string;
         };
-        Relationships: [];
+        Relationships: [
+          { foreignKeyName: "host_members_host_id_fkey"; columns: ["host_id"]; isOneToOne: false; referencedRelation: "hosts"; referencedColumns: ["id"] },
+          { foreignKeyName: "host_members_user_id_fkey"; columns: ["user_id"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] },
+        ];
       };
       hosts: {
         Row: {
@@ -353,52 +378,66 @@ export type Database = {
           stripe_account_id?: string | null;
           updated_at?: string;
         };
-        Relationships: [];
+        Relationships: [
+          { foreignKeyName: "hosts_application_id_fkey"; columns: ["application_id"]; isOneToOne: false; referencedRelation: "host_applications"; referencedColumns: ["id"] },
+        ];
       };
       identity_documents: {
         Row: {
+          back_path: string | null;
+          back_side_requested: boolean;
           created_at: string;
           deleted_at: string | null;
+          document_type: Database["public"]["Enums"]["identity_document_type"];
+          front_path: string;
           id: string;
           purged_at: string | null;
           reject_reason: string | null;
           reviewed_at: string | null;
           reviewed_by: string | null;
           status: Database["public"]["Enums"]["review_status"];
-          storage_path: string;
           submitted_at: string;
           updated_at: string;
           user_id: string;
         };
         Insert: {
+          back_path?: string | null;
+          back_side_requested?: boolean;
           created_at?: string;
           deleted_at?: string | null;
+          document_type: Database["public"]["Enums"]["identity_document_type"];
+          front_path: string;
           id?: string;
           purged_at?: string | null;
           reject_reason?: string | null;
           reviewed_at?: string | null;
           reviewed_by?: string | null;
           status?: Database["public"]["Enums"]["review_status"];
-          storage_path: string;
           submitted_at?: string;
           updated_at?: string;
           user_id: string;
         };
         Update: {
+          back_path?: string | null;
+          back_side_requested?: boolean;
           created_at?: string;
           deleted_at?: string | null;
+          document_type?: Database["public"]["Enums"]["identity_document_type"];
+          front_path?: string;
           id?: string;
           purged_at?: string | null;
           reject_reason?: string | null;
           reviewed_at?: string | null;
           reviewed_by?: string | null;
           status?: Database["public"]["Enums"]["review_status"];
-          storage_path?: string;
           submitted_at?: string;
           updated_at?: string;
           user_id?: string;
         };
-        Relationships: [];
+        Relationships: [
+          { foreignKeyName: "identity_documents_reviewed_by_fkey"; columns: ["reviewed_by"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] },
+          { foreignKeyName: "identity_documents_user_id_fkey"; columns: ["user_id"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] },
+        ];
       };
       monthly_statements: {
         Row: {
@@ -443,7 +482,9 @@ export type Database = {
           stripe_fee?: number;
           updated_at?: string;
         };
-        Relationships: [];
+        Relationships: [
+          { foreignKeyName: "monthly_statements_host_id_fkey"; columns: ["host_id"]; isOneToOne: false; referencedRelation: "hosts"; referencedColumns: ["id"] },
+        ];
       };
       notifications: {
         Row: {
@@ -485,7 +526,9 @@ export type Database = {
           to_email?: string;
           user_id?: string | null;
         };
-        Relationships: [];
+        Relationships: [
+          { foreignKeyName: "notifications_user_id_fkey"; columns: ["user_id"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] },
+        ];
       };
       orders: {
         Row: {
@@ -539,7 +582,10 @@ export type Database = {
           total?: number;
           updated_at?: string;
         };
-        Relationships: [];
+        Relationships: [
+          { foreignKeyName: "orders_guest_id_fkey"; columns: ["guest_id"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] },
+          { foreignKeyName: "orders_host_id_fkey"; columns: ["host_id"]; isOneToOne: false; referencedRelation: "hosts"; referencedColumns: ["id"] },
+        ];
       };
       profiles: {
         Row: {
@@ -635,7 +681,10 @@ export type Database = {
           transfer_reversal_amount?: number;
           updated_at?: string;
         };
-        Relationships: [];
+        Relationships: [
+          { foreignKeyName: "refunds_booking_id_fkey"; columns: ["booking_id"]; isOneToOne: true; referencedRelation: "bookings"; referencedColumns: ["id"] },
+          { foreignKeyName: "refunds_created_by_fkey"; columns: ["created_by"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] },
+        ];
       };
       space_photos: {
         Row: {
@@ -659,7 +708,9 @@ export type Database = {
           space_id?: string;
           storage_path?: string;
         };
-        Relationships: [];
+        Relationships: [
+          { foreignKeyName: "space_photos_space_id_fkey"; columns: ["space_id"]; isOneToOne: false; referencedRelation: "spaces"; referencedColumns: ["id"] },
+        ];
       };
       spaces: {
         Row: {
@@ -710,7 +761,9 @@ export type Database = {
           status?: Database["public"]["Enums"]["space_status"];
           updated_at?: string;
         };
-        Relationships: [];
+        Relationships: [
+          { foreignKeyName: "spaces_host_id_fkey"; columns: ["host_id"]; isOneToOne: false; referencedRelation: "hosts"; referencedColumns: ["id"] },
+        ];
       };
       stripe_events: {
         Row: {
@@ -744,6 +797,8 @@ export type Database = {
     Functions: {
       consume_rate_limit: { Args: { p_key: string; p_limit: number; p_window_seconds: number }; Returns: { allowed: boolean; hits: number; retry_after_seconds: number }[] };
       min_price_per_30min: { Args: { p_min_slots: number }; Returns: number };
+      review_identity_document: { Args: { p_document_id: string; p_approve: boolean; p_reject_reason?: string; p_request_back_side?: boolean }; Returns: undefined };
+      submit_identity_document: { Args: { p_document_type: Database["public"]["Enums"]["identity_document_type"]; p_front_path: string; p_back_path?: string }; Returns: string };
     };
     Enums: {
       account_status: "active" | "suspended";
@@ -751,6 +806,7 @@ export type Database = {
       cancel_actor: "guest" | "host" | "admin";
       cancel_policy: "full" | "half" | "none";
       host_status: "applied" | "active" | "suspended";
+      identity_document_type: "drivers_license" | "my_number_card" | "passport" | "residence_card";
       identity_status: "unsubmitted" | "pending" | "approved" | "rejected";
       notification_status: "queued" | "sent" | "failed";
       order_status: "pending" | "paid" | "expired" | "failed";
