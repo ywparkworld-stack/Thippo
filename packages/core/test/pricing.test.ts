@@ -88,3 +88,12 @@ describe("calcOrderFees", () => {
     expect(() => calcOrderFees([])).toThrow();
   });
 });
+
+describe("includedConsumptionTax", () => {
+  it("税込額から内税を切り捨てで計算する", async () => {
+    const { includedConsumptionTax } = await import("../src");
+    expect(includedConsumptionTax(1100)).toBe(100);
+    expect(includedConsumptionTax(1000)).toBe(90); // 90.9…
+    expect(includedConsumptionTax(0)).toBe(0);
+  });
+});

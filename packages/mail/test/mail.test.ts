@@ -63,3 +63,24 @@ describe("ResendMailer", () => {
     );
   });
 });
+
+describe("予約確定のメール", () => {
+  it("注文番号・予約の内容・金額が入る", () => {
+    const m = templates.bookingConfirmedGuest(ctx, {
+      name: "山田",
+      orderNumber: "T-00000001",
+      total: "¥3,000",
+      lines: [
+        {
+          spaceName: "会議室A",
+          when: "2026/10/01(木) 10:00〜11:30",
+          address: "東京都",
+          amount: "¥3,000",
+        },
+      ],
+    });
+    expect(m.subject).toContain("T-00000001");
+    expect(m.text).toContain("・会議室A\n  2026/10/01(木) 10:00〜11:30");
+    expect(m.text).toContain("¥3,000");
+  });
+});

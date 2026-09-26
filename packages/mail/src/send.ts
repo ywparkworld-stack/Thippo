@@ -32,6 +32,18 @@ export async function sendTemplatedEmail<T extends TemplateName>(input: {
   const { subject, text } = render(templateContext(), input.data);
   const service = createSupabaseServiceClient();
 
+  // 同じキーで送信済みなら送らない（Webhook の再送などで二重に送らないため）
+  if (input.idempotencyKey) {
+    const { data: sent } = await service
+      .from("notifications")
+      .select("id")
+      .eq("template", input.template)
+      .eq("status", "sent")
+      .eq("payload->>idempotency_key", input.idempotencyKey)
+      .limit(1);
+    if (sent && sent.length > 0) return { ok: true, notificationId: sent[0]!.id };
+  }
+
   const { data: row, error: insertError } = await service
     .from("notifications")
     .insert({

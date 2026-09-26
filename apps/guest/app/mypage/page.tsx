@@ -47,7 +47,10 @@ export default async function MyPage(props: PageProps<"/mypage">) {
         </Card>
         <Card className="space-y-2">
           <h2 className="font-bold">予約履歴</h2>
-          <p className="text-sm text-zinc-500">フェーズ6で実装します。</p>
+          <p className="text-sm text-zinc-600">予約の確認・領収書</p>
+          <Link href="/mypage/orders" className="text-sm text-brand-700 underline">
+            見る
+          </Link>
         </Card>
         <Card className="space-y-2">
           <h2 className="font-bold">パスワード</h2>

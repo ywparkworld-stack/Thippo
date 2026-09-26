@@ -537,7 +537,10 @@ export type Database = {
           expires_at: string;
           guest_id: string;
           host_id: string;
+          host_stripe_account_id: string | null;
           id: string;
+          late_payment_refund_id: string | null;
+          late_payment_refunded_at: string | null;
           order_number: string;
           paid_at: string | null;
           status: Database["public"]["Enums"]["order_status"];
@@ -554,7 +557,10 @@ export type Database = {
           expires_at: string;
           guest_id: string;
           host_id: string;
+          host_stripe_account_id?: string | null;
           id?: string;
+          late_payment_refund_id?: string | null;
+          late_payment_refunded_at?: string | null;
           order_number?: string;
           paid_at?: string | null;
           status?: Database["public"]["Enums"]["order_status"];
@@ -571,7 +577,10 @@ export type Database = {
           expires_at?: string;
           guest_id?: string;
           host_id?: string;
+          host_stripe_account_id?: string | null;
           id?: string;
+          late_payment_refund_id?: string | null;
+          late_payment_refunded_at?: string | null;
           order_number?: string;
           paid_at?: string | null;
           status?: Database["public"]["Enums"]["order_status"];
@@ -811,20 +820,26 @@ export type Database = {
     Functions: {
       approve_host_application: { Args: { p_application_id: string; p_user_id: string }; Returns: string };
       claim_stripe_event: { Args: { p_event_id: string; p_type: string; p_payload: Json }; Returns: boolean };
+      close_pending_order: { Args: { p_order_id: string; p_status: Database["public"]["Enums"]["order_status"] }; Returns: string };
       complete_stripe_event: { Args: { p_event_id: string; p_error?: string }; Returns: undefined };
       consume_rate_limit: { Args: { p_key: string; p_limit: number; p_window_seconds: number }; Returns: { allowed: boolean; hits: number; retry_after_seconds: number }[] };
+      create_order_from_cart: { Args: { p_guest_id: string }; Returns: { order_id: string; order_number: string; total: number; application_fee_amount: number; host_stripe_account_id: string }[] };
+      expire_due_orders: { Args: { p_limit?: number }; Returns: { order_id: string; payment_intent_id: string }[] };
+      mark_order_paid: { Args: { p_order_id: string; p_payment_intent_id: string; p_amount: number; p_charge_id: string; p_transfer_id: string }; Returns: string };
       min_price_per_30min: { Args: { p_min_slots: number }; Returns: number };
+      record_late_payment_refund: { Args: { p_order_id: string; p_refund_id: string }; Returns: undefined };
       reject_host_application: { Args: { p_application_id: string; p_reason: string }; Returns: undefined };
       replace_availability_rules: { Args: { p_space_id: string; p_rules: Json }; Returns: undefined };
       review_identity_document: { Args: { p_document_id: string; p_approve: boolean; p_reject_reason?: string; p_request_back_side?: boolean }; Returns: undefined };
       search_spaces: { Args: { p_keyword?: string; p_min_capacity?: number; p_limit?: number }; Returns: { id: string; host_id: string; company_name: string; name: string; area: string; address: string; capacity: number; price_per_30min: number; min_slots: number; cover_path: string }[] };
+      set_order_payment_intent: { Args: { p_order_id: string; p_payment_intent_id: string }; Returns: undefined };
       space_busy_periods: { Args: { p_space_id: string; p_from: string; p_to: string }; Returns: { period_start: string; period_end: string }[] };
       spaces_busy_periods: { Args: { p_space_ids: string[]; p_from: string; p_to: string }; Returns: { space_id: string; period_start: string; period_end: string }[] };
       submit_identity_document: { Args: { p_document_type: Database["public"]["Enums"]["identity_document_type"]; p_front_path: string; p_back_path?: string }; Returns: string };
     };
     Enums: {
       account_status: "active" | "suspended";
-      booking_status: "pending" | "confirmed" | "cancelled" | "completed" | "no_show";
+      booking_status: "pending" | "expired" | "confirmed" | "cancelled" | "completed" | "no_show";
       cancel_actor: "guest" | "host" | "admin";
       cancel_policy: "full" | "half" | "none";
       host_status: "applied" | "active" | "suspended";

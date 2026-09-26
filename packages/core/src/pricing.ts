@@ -92,3 +92,12 @@ export function calcOrderFees(
   const applicationFeeAmount = sumYen(bookings.map((b) => b.applicationFee));
   return { bookings, total, applicationFeeAmount, transferAmount: total - applicationFeeAmount };
 }
+
+/**
+ * 税込額に含まれる消費税（内税。1円未満切り捨て）。領収書・請求書では、書類ごとに1回だけ端数処理する
+ * （適格請求書の要件）。例: 1,100円 → 100円
+ */
+export function includedConsumptionTax(amountInclTax: number): number {
+  const rate = PRICING.consumptionTaxPercent;
+  return floorDiv(mulYen(amountInclTax, rate), 100 + rate);
+}
