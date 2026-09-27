@@ -72,7 +72,7 @@ CI では両方を実行する（`.github/workflows/ci.yml`）。
 - 定期実行とメール：[docs/operations.md](docs/operations.md)
 - デプロイ手順：[docs/deploy.md](docs/deploy.md)
 - 本番リリースのチェックリスト：[docs/release-checklist.md](docs/release-checklist.md)
-- E2E テスト：`e2e/`（GitHub Actions の `.github/workflows/e2e.yml` で実行。Stripe のテストモードの Secrets が必要）
+- E2E テスト：`e2e/`（GitHub Actions の `.github/workflows/e2e.yml` で実行。準備は [docs/e2e-setup.md](docs/e2e-setup.md)）
 
 ローカルで運営管理を開くときは、admin アプリの `.env.local` に `APP_ENV=development` と `ADMIN_ACCESS_GATE=none` を設定する。
 
