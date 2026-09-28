@@ -1,6 +1,7 @@
 import "server-only";
 import type Stripe from "stripe";
 import { createSupabaseServiceClient } from "@thippo/db/admin";
+import { isStubId, STUB_PREFIX } from "./mode";
 import { idempotencyKey, stripe } from "./server";
 
 export type CancelActor = "guest" | "host" | "admin";
@@ -95,6 +96,7 @@ export async function executeRefund(
 
   try {
     if (!order?.stripe_charge_id) throw new Error("order has no charge");
+    if (isStubId(order.stripe_charge_id)) return await completeStubRefund(refund);
     if (!stripeRefundId) {
       const existing = await findStripeRefund(order.stripe_charge_id, refund.id);
       stripeRefundId =
@@ -157,6 +159,36 @@ export async function executeRefund(
     });
     return { ok: false, completed: false };
   }
+}
+
+/**
+ * stub の支払い（D37）の返金。Stripe にはお金が動いていないため、返金と差し戻しを記録してすぐ完了にする。
+ * 金額・回数などの判定は Stripe のときと同じ（DB 関数で決めたとおり）。
+ */
+async function completeStubRefund(refund: {
+  id: string;
+  transfer_reversal_amount: number;
+  stripe_refund_id: string | null;
+  stripe_transfer_reversal_id: string | null;
+}): Promise<{ ok: boolean; completed: boolean }> {
+  const service = createSupabaseServiceClient();
+  const stripeRefundId = refund.stripe_refund_id ?? STUB_PREFIX.refund + refund.id;
+  const reversalId =
+    refund.transfer_reversal_amount > 0
+      ? (refund.stripe_transfer_reversal_id ?? STUB_PREFIX.transferReversal + refund.id)
+      : null;
+  const { error } = await service.rpc("record_refund_progress", {
+    p_refund_id: refund.id,
+    p_stripe_refund_id: stripeRefundId,
+    p_stripe_transfer_reversal_id: reversalId as string,
+  });
+  if (error) throw new Error(`record_refund_progress failed: ${error.message}`);
+  const { data: changed, error: markError } = await service.rpc("mark_refund_succeeded", {
+    p_refund_id: refund.id,
+    p_stripe_refund_id: stripeRefundId,
+  });
+  if (markError) throw new Error(`mark_refund_succeeded failed: ${markError.message}`);
+  return { ok: true, completed: changed === true };
 }
 
 async function findStripeRefund(chargeId: string, refundId: string): Promise<Stripe.Refund | null> {

@@ -116,6 +116,31 @@ describe("executeRefund", () => {
   });
 });
 
+describe("executeRefund（テスト用の支払い。付録 D37）", () => {
+  it("stub の支払いは Stripe を呼ばずに返金・差し戻しを記録して完了にする", async () => {
+    single.mockResolvedValue(
+      refundRow({
+        bookings: {
+          order_id: "o_1",
+          orders: { stripe_charge_id: "ch_stub_o_1", stripe_transfer_id: "tr_stub_o_1" },
+        },
+      }),
+    );
+    rpc.mockImplementation(async (name: string) =>
+      name === "mark_refund_succeeded" ? { data: true, error: null } : { data: null, error: null },
+    );
+    expect(await executeRefund("rf_1")).toEqual({ ok: true, completed: true });
+    expect(rpc).toHaveBeenCalledWith("record_refund_progress", {
+      p_refund_id: "rf_1",
+      p_stripe_refund_id: "re_stub_rf_1",
+      p_stripe_transfer_reversal_id: "trr_stub_rf_1",
+    });
+    expect(refundsCreate).not.toHaveBeenCalled();
+    expect(createReversal).not.toHaveBeenCalled();
+    expect(refundsRetrieve).not.toHaveBeenCalled();
+  });
+});
+
 describe("cancelBookingAndRefund", () => {
   it("返金なし（0円）なら Stripe の処理を行わない", async () => {
     rpc.mockResolvedValueOnce({

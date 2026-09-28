@@ -6,7 +6,9 @@ import { fieldErrors, hostProfileSchema } from "@thippo/core";
 import type { FormState } from "@thippo/auth";
 import { appUrl } from "@thippo/auth/urls";
 import { createSupabaseServiceClient } from "@thippo/db/admin";
+import { isStubId, isStubPayments } from "@thippo/payments/mode";
 import {
+  completeStubConnectAccount,
   createConnectAccount,
   createDashboardLink,
   createOnboardingLink,
@@ -37,6 +39,12 @@ export async function saveHostProfileAction(
 /** Stripe Connect（Express）の登録を始める・続ける（SPEC §9）。アカウントがなければ作る */
 export async function startStripeOnboardingAction(): Promise<void> {
   const { host, userId, supabase } = await requireHost("/onboarding");
+  if (isStubPayments()) {
+    // Stripe につながずに登録済みにする（付録 D37。本番では使えない）
+    await completeStubConnectAccount(host.id);
+    revalidatePath("/onboarding");
+    redirect("/onboarding?stripe=stub");
+  }
   let accountId = host.stripe_account_id;
   if (!accountId) {
     const { data: me } = await supabase.from("profiles").select("email").eq("id", userId).single();
@@ -61,7 +69,9 @@ export async function startStripeOnboardingAction(): Promise<void> {
 
 export async function openStripeDashboardAction(): Promise<void> {
   const { host } = await requireHost("/onboarding");
-  if (!host.stripe_account_id || !host.details_submitted) redirect("/onboarding");
+  if (!host.stripe_account_id || !host.details_submitted || isStubId(host.stripe_account_id)) {
+    redirect("/onboarding");
+  }
   const link = await createDashboardLink(host.stripe_account_id);
   redirect(link.url);
 }

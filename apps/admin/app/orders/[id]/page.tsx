@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { parseTstzRange } from "@thippo/core";
 import { requireAppSession } from "@thippo/auth/server";
+import { isStubId } from "@thippo/payments";
 import { Card, formatYen } from "@thippo/ui";
 import { adminRefundBookingAction, retryRefundAction } from "../../actions/admin";
 import { ActionForm } from "../../_components/action-form";
@@ -92,7 +93,18 @@ export default async function OrderPage(props: PageProps<"/orders/[id]">) {
           <dd>
             {dt(o.created_at)} / {dt(o.paid_at)}
           </dd>
-          {o.stripe_payment_intent_id && (
+          {o.stripe_payment_intent_id && isStubId(o.stripe_payment_intent_id) && (
+            <>
+              <dt className="text-zinc-500">Stripe</dt>
+              <dd>
+                テスト用の支払い（Stripe を使っていません）
+                <span className="ml-2 font-mono text-xs text-zinc-500">
+                  {o.stripe_payment_intent_id}
+                </span>
+              </dd>
+            </>
+          )}
+          {o.stripe_payment_intent_id && !isStubId(o.stripe_payment_intent_id) && (
             <>
               <dt className="text-zinc-500">Stripe</dt>
               <dd>

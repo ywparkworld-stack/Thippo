@@ -7,6 +7,7 @@ import { totp } from "../lib/totp";
 
 /**
  * 会員登録 → 本人確認 → 承認 → 予約 → 支払い（Stripe のテストカード）→ キャンセル → 返金（SPEC §14）
+ * テスト用の支払いモード（PAYMENTS_MODE=stub。付録 D37）では、カード情報を入力せずに支払い、返金はすぐ完了する。
  */
 const state = () =>
   JSON.parse(readFileSync(join(import.meta.dirname, "..", ".e2e-state.json"), "utf8")) as {
@@ -93,14 +94,18 @@ test("会員登録から返金まで", async ({ browser }) => {
   await guest.getByRole("button", { name: "予約カゴに入れる" }).click();
   await expect(guest.getByText("予約カゴに入れました")).toBeVisible();
 
-  // 購入手続き：Stripe のテストカードで支払う
+  // 購入手続き：Stripe のテストカードで支払う（stub ならカード情報の入力はない）
   await guest.goto(`${env.guestUrl}/checkout`);
-  const card = guest.frameLocator('iframe[title*="Secure payment input frame"]').first();
-  await card.getByLabel(/Card number|カード番号/).fill("4242424242424242");
-  await card.getByLabel(/Expiration|有効期限/).fill("12 / 34");
-  await card.getByLabel(/Security code|セキュリティコード/).fill("123");
-  const country = card.getByLabel(/Country|国/);
-  if (await country.count()) await country.selectOption("JP");
+  if (env.stub) {
+    await expect(guest.getByText("テスト用の支払いモード")).toBeVisible();
+  } else {
+    const card = guest.frameLocator('iframe[title*="Secure payment input frame"]').first();
+    await card.getByLabel(/Card number|カード番号/).fill("4242424242424242");
+    await card.getByLabel(/Expiration|有効期限/).fill("12 / 34");
+    await card.getByLabel(/Security code|セキュリティコード/).fill("123");
+    const country = card.getByLabel(/Country|国/);
+    if (await country.count()) await country.selectOption("JP");
+  }
   await guest.getByRole("checkbox", { name: /利用規約/ }).check();
   await guest.getByRole("checkbox", { name: /キャンセル規定/ }).check();
   await guest.getByRole("button", { name: "支払う" }).click();
@@ -124,7 +129,7 @@ test("会員登録から返金まで", async ({ browser }) => {
   await guest.getByRole("button", { name: "キャンセルする" }).click();
   await expect(guest.getByText("キャンセルしました")).toBeVisible();
 
-  // 返金の完了（Webhook の charge.refunded）
+  // 返金の完了（Webhook の charge.refunded。stub ならキャンセルと同時に完了する）
   await expect(async () => {
     await guest.reload();
     await expect(guest.getByText("返金 ¥2,000（完了）")).toBeVisible({ timeout: 2_000 });

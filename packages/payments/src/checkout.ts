@@ -2,7 +2,11 @@ import "server-only";
 import type Stripe from "stripe";
 import { STRIPE_CONNECT } from "@thippo/core";
 import { createSupabaseServiceClient } from "@thippo/db/admin";
+import { isStubId, isStubPayments, STUB_PREFIX } from "./mode";
 import { idempotencyKey, stripe } from "./server";
+
+/** stub のときに clientSecret の代わりに返す値（支払い画面は Stripe Elements を出さない） */
+export const STUB_CLIENT_SECRET = "stub";
 
 /** DB 関数のエラーコード → 利用者向けの文言 */
 export const CHECKOUT_ERROR_MESSAGES: Record<string, string> = {
@@ -50,6 +54,8 @@ export async function closeOwnPendingOrders(guestId: string): Promise<void> {
 
 /** PaymentIntent を取り消す。すでに取り消し済みなら true、成功済み・処理中で取り消せなければ false */
 export async function cancelPaymentIntent(paymentIntentId: string): Promise<boolean> {
+  // stub の支払いは Stripe にないため、いつでも取り消せる（D37）
+  if (isStubId(paymentIntentId)) return true;
   const pi = await stripe().paymentIntents.retrieve(paymentIntentId);
   if (pi.status === "canceled") return true;
   if (pi.status === "succeeded" || pi.status === "processing") return false;
@@ -70,6 +76,20 @@ export async function createOrderAndPaymentIntent(guestId: string): Promise<Crea
   const { data, error } = await service.rpc("create_order_from_cart", { p_guest_id: guestId });
   if (error || !data?.[0]) throw new Error(checkoutErrorCode(error?.message));
   const order = data[0];
+
+  if (isStubPayments()) {
+    // Stripe につながずに、支払い画面で「テスト支払い」を押すと支払い済みにする（D37）
+    await service.rpc("set_order_payment_intent", {
+      p_order_id: order.order_id,
+      p_payment_intent_id: STUB_PREFIX.paymentIntent + order.order_id,
+    });
+    return {
+      orderId: order.order_id,
+      orderNumber: order.order_number,
+      total: order.total,
+      clientSecret: STUB_CLIENT_SECRET,
+    };
+  }
 
   let pi: Stripe.PaymentIntent;
   try {
@@ -162,6 +182,45 @@ export async function processSucceededPaymentIntent(
     return { kind: "late_refunded", orderId };
   }
   return result === "paid" ? { kind: "paid", orderId } : { kind: "already_paid", orderId };
+}
+
+export type StubPaymentOutcome =
+  | { kind: "paid"; orderId: string }
+  | { kind: "already_paid"; orderId: string }
+  | { kind: "expired"; orderId: string };
+
+/**
+ * stub の支払いを完了する（D37）。Webhook の payment_intent.succeeded の代わり。
+ * stub のときだけ、本人の注文で、stub の支払いに限って呼べる。金額は DB の注文の値を使う（画面の値は使わない）。
+ */
+export async function completeStubPayment(
+  orderId: string,
+  guestId: string,
+): Promise<StubPaymentOutcome> {
+  if (!isStubPayments()) throw new Error("stub_payments_disabled");
+  const service = createSupabaseServiceClient();
+  const { data: order } = await service
+    .from("orders")
+    .select("id, guest_id, total, stripe_payment_intent_id")
+    .eq("id", orderId)
+    .maybeSingle();
+  if (!order || order.guest_id !== guestId) throw new Error("order_not_found");
+  const piId = order.stripe_payment_intent_id;
+  if (!piId || !isStubId(piId)) throw new Error("not_stub_payment");
+
+  const { data: result, error } = await service.rpc("mark_order_paid", {
+    p_order_id: order.id,
+    p_payment_intent_id: piId,
+    p_amount: order.total,
+    p_charge_id: STUB_PREFIX.charge + order.id,
+    p_transfer_id: STUB_PREFIX.transfer + order.id,
+  });
+  if (error) throw new Error(`mark_order_paid failed: ${error.message}`);
+  // 期限切れのあとの支払い：お金は動いていないので返金は不要。注文は閉じたまま
+  if (result === "late") return { kind: "expired", orderId: order.id };
+  return result === "paid"
+    ? { kind: "paid", orderId: order.id }
+    : { kind: "already_paid", orderId: order.id };
 }
 
 /** payment_intent.canceled / payment_failed の最終失敗：注文を failed にして枠を解放する */

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { formatTokyoDateTime, minutesToTime, toTokyoMinutes } from "@thippo/core";
 import { requireAppSession } from "@thippo/auth/server";
+import { isStubId } from "@thippo/payments";
 import { stripe } from "@thippo/payments/server";
 import { Card, Notice, formatYen } from "@thippo/ui";
 import { loadOwnOrder } from "../../lib/orders";
@@ -21,7 +22,9 @@ export default async function CompletePage(props: PageProps<"/checkout/complete"
   let order = await loadOwnOrder(supabase, orderId);
   if (!order) notFound();
 
-  if (order.status === "pending" && order.stripe_payment_intent_id) {
+  // テスト用の支払い（付録 D37）は支払い画面で確定するため、ここで Stripe に問い合わせない
+  const stubPending = order.status === "pending" && isStubId(order.stripe_payment_intent_id);
+  if (order.status === "pending" && order.stripe_payment_intent_id && !stubPending) {
     const pi = await stripe().paymentIntents.retrieve(order.stripe_payment_intent_id);
     if (pi.status === "succeeded") {
       await handleSucceededPaymentIntent(pi);
@@ -36,6 +39,14 @@ export default async function CompletePage(props: PageProps<"/checkout/complete"
         <>
           <h1 className="text-2xl font-bold">ご予約が確定しました</h1>
           <p className="text-sm text-zinc-700">確認のメールをお送りしました。</p>
+        </>
+      ) : stubPending ? (
+        <>
+          <h1 className="text-2xl font-bold">お支払いが完了していません</h1>
+          <Notice tone="warning">予約カゴからもう一度お手続きください。</Notice>
+          <Link href="/cart" className="text-brand-700 underline">
+            予約カゴに戻る
+          </Link>
         </>
       ) : order.status === "pending" ? (
         <>

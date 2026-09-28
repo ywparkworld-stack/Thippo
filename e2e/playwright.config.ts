@@ -1,7 +1,8 @@
 import { defineConfig, devices } from "@playwright/test";
 
 /**
- * E2E テスト（SPEC §14・付録 D35）。ローカルの Supabase（supabase start）・Stripe のテストモード・
+ * E2E テスト（SPEC §14・付録 D35）。ローカルの Supabase（supabase start）・Stripe のテストモード
+ * （または PAYMENTS_MODE=stub のテスト用の支払いモード。付録 D37）・
  * 3アプリ（next start）が動いている前提で実行する。CI の手順は .github/workflows/e2e.yml。
  */
 export default defineConfig({

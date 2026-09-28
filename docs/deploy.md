@@ -72,6 +72,7 @@ TODO(要確認): 本番のドメイン（SPEC §16）。
 | `ADMIN_URL`                                                                                       |       |      | ○     |
 | `NEXT_PUBLIC_SUPABASE_URL`・`NEXT_PUBLIC_SUPABASE_ANON_KEY`                                       | ○     | ○    | ○     |
 | `SUPABASE_SERVICE_ROLE_KEY`                                                                       | ○     | ○    | ○     |
+| `PAYMENTS_MODE`（`stripe` / `stub`。本番は `stripe` か未設定）                                    | ○     | ○    |       |
 | `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`                                                              | ○     |      |       |
 | `STRIPE_SECRET_KEY`                                                                               | ○     | ○    | ○     |
 | `STRIPE_WEBHOOK_SECRET`・`STRIPE_CONNECT_WEBHOOK_SECRET`                                          | ○     |      |       |
@@ -83,6 +84,7 @@ TODO(要確認): 本番のドメイン（SPEC §16）。
 | `NEXT_PUBLIC_SENTRY_DSN`（アプリごとの DSN）・`SENTRY_AUTH_TOKEN`・`SENTRY_ORG`・`SENTRY_PROJECT` | ○     | ○    | ○     |
 
 - staging と production で値を分ける（Stripe はテストキーと本番キー、Supabase は別プロジェクト）。
+- Stripe の準備ができるまでは、staging を `PAYMENTS_MODE=stub`（テスト用の支払いモード。[stripe.md](stripe.md#テスト用の支払いモードpayments_modestub)）で動かせる。このとき Stripe のキーと Webhook は不要。production では使えない。
 - `SUPABASE_SERVICE_ROLE_KEY`・`STRIPE_SECRET_KEY` などは Sensitive にする。
 
 ### ドメイン

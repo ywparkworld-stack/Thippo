@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { formatTokyoDateTime } from "@thippo/core";
+import { isStubId } from "@thippo/payments";
 import { Button, Card } from "@thippo/ui";
 import { openStripeDashboardAction } from "../actions/onboarding";
 import { requireHost } from "../lib/host";
@@ -18,7 +19,7 @@ export default async function AccountPage() {
         <Link href="/onboarding" className="text-sm text-brand-700 underline">
           会社情報・入金先の登録を変更する
         </Link>
-        {host.details_submitted && (
+        {host.details_submitted && !isStubId(host.stripe_account_id) && (
           <form action={openStripeDashboardAction}>
             <Button type="submit" variant="secondary">
               Stripe の管理画面（入金・口座）を開く

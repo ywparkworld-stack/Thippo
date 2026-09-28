@@ -1,8 +1,9 @@
 name: E2E
 
-# 会員登録 → 本人確認 → 承認 → 予約 → 支払い（Stripe のテストカード）→ キャンセル → 返金（SPEC §14・付録 D35）
-# ローカルの Supabase（supabase start）と Stripe のテストモードで実行する。
-# 必要な Secrets: STRIPE_TEST_SECRET_KEY, STRIPE_TEST_PUBLISHABLE_KEY, STRIPE_TEST_CONNECTED_ACCOUNT_ID
+# 会員登録 → 本人確認 → 承認 → 予約 → 支払い → キャンセル → 返金（SPEC §14・付録 D35）
+# ローカルの Supabase（supabase start）で実行する。
+# Secrets（STRIPE_TEST_SECRET_KEY, STRIPE_TEST_PUBLISHABLE_KEY, STRIPE_TEST_CONNECTED_ACCOUNT_ID）がすべてあれば
+# Stripe のテストモードで、なければテスト用の支払いモード（PAYMENTS_MODE=stub。付録 D37）で実行する。
 on:
   pull_request:
   push:
@@ -32,33 +33,26 @@ jobs:
       ADMIN_URL: http://localhost:3002
       CRON_SECRET: e2e-cron-secret
     steps:
-      - name: Secrets がなければ実行しない
-        id: guard
+      - name: 決済モードを決める
         run: |
-          if [ -z "$STRIPE_SECRET_KEY" ] || [ -z "$NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY" ] || [ -z "$STRIPE_TEST_CONNECTED_ACCOUNT_ID" ]; then
-            echo "::notice::Stripe のテストモードの Secrets が設定されていないため、E2E を実行しません"
-            echo "run=false" >> "$GITHUB_OUTPUT"
+          if [ -n "$STRIPE_SECRET_KEY" ] && [ -n "$NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY" ] && [ -n "$STRIPE_TEST_CONNECTED_ACCOUNT_ID" ]; then
+            echo "PAYMENTS_MODE=stripe" >> "$GITHUB_ENV"
           else
-            echo "run=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::Stripe のテストモードの Secrets がないため、テスト用の支払いモード（stub）で実行します"
+            echo "PAYMENTS_MODE=stub" >> "$GITHUB_ENV"
           fi
       - uses: actions/checkout@v4
-        if: steps.guard.outputs.run == 'true'
       - uses: pnpm/action-setup@v4
-        if: steps.guard.outputs.run == 'true'
       - uses: actions/setup-node@v4
-        if: steps.guard.outputs.run == 'true'
         with:
           node-version: 22
           cache: pnpm
       - uses: supabase/setup-cli@v1
-        if: steps.guard.outputs.run == 'true'
         with:
           version: latest
       - run: pnpm install --frozen-lockfile
-        if: steps.guard.outputs.run == 'true'
 
       - name: Supabase を起動する（マイグレーションも適用される）
-        if: steps.guard.outputs.run == 'true'
         run: |
           supabase start -x realtime,studio,imgproxy,edge-runtime,logflare,vector,supavisor
           supabase status -o json > /tmp/sb.json
@@ -70,7 +64,7 @@ jobs:
           } >> "$GITHUB_ENV"
 
       - name: Stripe の Webhook をローカルに転送する
-        if: steps.guard.outputs.run == 'true'
+        if: env.PAYMENTS_MODE == 'stripe'
         run: |
           echo "STRIPE_WEBHOOK_SECRET=$(docker run --rm stripe/stripe-cli listen --api-key "$STRIPE_SECRET_KEY" --print-secret)" >> "$GITHUB_ENV"
           docker run -d --name stripe-listen --network host stripe/stripe-cli listen --api-key "$STRIPE_SECRET_KEY" \
@@ -78,7 +72,6 @@ jobs:
             --forward-to http://localhost:3000/api/webhooks/stripe
 
       - name: 3アプリをビルドして起動する
-        if: steps.guard.outputs.run == 'true'
         run: |
           pnpm -r build
           (cd apps/guest && nohup pnpm start > /tmp/guest.log 2>&1 &)
@@ -87,20 +80,18 @@ jobs:
           npx --yes wait-on -t 120000 http://localhost:3000 http://localhost:3001/login http://localhost:3002/login
 
       - name: Playwright のブラウザを入れる
-        if: steps.guard.outputs.run == 'true'
         run: pnpm --filter @thippo/e2e exec playwright install --with-deps chromium
 
       - name: E2E を実行する
-        if: steps.guard.outputs.run == 'true'
         run: pnpm --filter @thippo/e2e e2e
 
       - name: ログと結果を残す
-        if: failure() && steps.guard.outputs.run == 'true'
+        if: failure()
         run: |
           tail -n 200 /tmp/guest.log /tmp/host.log /tmp/admin.log || true
           docker logs stripe-listen | tail -n 100 || true
       - uses: actions/upload-artifact@v4
-        if: failure() && steps.guard.outputs.run == 'true'
+        if: failure()
         with:
           name: playwright-report
           path: e2e/playwright-report

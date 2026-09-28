@@ -5,17 +5,29 @@ import { useMemo, useState } from "react";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements, PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js";
 import { Button, Notice } from "@thippo/ui";
-import { startPaymentAction } from "../actions/checkout";
+import { completeStubPaymentAction, startPaymentAction } from "../actions/checkout";
+
+type FormError = { message: string; backToCart: boolean } | null;
 
 /**
  * Stripe Payment Element で支払う（SPEC §6・付録 D20: カードのみ）。
  * 「支払う」を押すと、サーバーで注文と PaymentIntent を作ってから決済を確定する。
+ * テスト用の支払いモード（付録 D37）では Stripe を使わず、注文を作ってそのまま支払い済みにする。
  */
-export function CheckoutForm({ total, publishableKey }: { total: number; publishableKey: string }) {
+export function CheckoutForm({
+  total,
+  publishableKey,
+  stub,
+}: {
+  total: number;
+  publishableKey: string;
+  stub: boolean;
+}) {
   const stripePromise = useMemo(
-    () => (publishableKey ? loadStripe(publishableKey, { locale: "ja" }) : null),
-    [publishableKey],
+    () => (!stub && publishableKey ? loadStripe(publishableKey, { locale: "ja" }) : null),
+    [publishableKey, stub],
   );
+  if (stub) return <StubPaymentForm total={total} />;
   if (!stripePromise) return <Notice tone="error">決済の設定がありません。</Notice>;
   return (
     <Elements
@@ -36,9 +48,8 @@ export function CheckoutForm({ total, publishableKey }: { total: number; publish
 function PaymentForm({ total }: { total: number }) {
   const stripe = useStripe();
   const elements = useElements();
-  const [agreeTerms, setAgreeTerms] = useState(false);
-  const [agreeCancelPolicy, setAgreeCancelPolicy] = useState(false);
-  const [error, setError] = useState<{ message: string; backToCart: boolean } | null>(null);
+  const agreements = useAgreements();
+  const [error, setError] = useState<FormError>(null);
   const [pending, setPending] = useState(false);
 
   async function pay(event: React.FormEvent) {
@@ -55,11 +66,7 @@ function PaymentForm({ total }: { total: number }) {
         });
         return;
       }
-      const started = await startPaymentAction({
-        agreeTerms,
-        agreeCancelPolicy,
-        displayedTotal: total,
-      });
+      const started = await startPaymentAction({ ...agreements.values, displayedTotal: total });
       if (!started.ok) {
         setError({ message: started.message, backToCart: started.backToCart });
         return;
@@ -86,11 +93,88 @@ function PaymentForm({ total }: { total: number }) {
   return (
     <form onSubmit={pay} className="space-y-4">
       <PaymentElement />
+      <FormFooter
+        agreements={agreements}
+        error={error}
+        disabled={!stripe || pending || !agreements.ok}
+        pending={pending}
+      />
+    </form>
+  );
+}
+
+/** テスト用の支払いモード（付録 D37）。カード情報は入力せず、支払いが成功したものとして扱う */
+function StubPaymentForm({ total }: { total: number }) {
+  const agreements = useAgreements();
+  const [error, setError] = useState<FormError>(null);
+  const [pending, setPending] = useState(false);
+
+  async function pay(event: React.FormEvent) {
+    event.preventDefault();
+    if (pending) return;
+    setError(null);
+    setPending(true);
+    try {
+      const started = await startPaymentAction({ ...agreements.values, displayedTotal: total });
+      if (!started.ok) {
+        setError({ message: started.message, backToCart: started.backToCart });
+        return;
+      }
+      const completed = await completeStubPaymentAction(started.orderId);
+      if (!completed.ok) {
+        setError({ message: completed.message, backToCart: false });
+        return;
+      }
+      window.location.assign(`/checkout/complete?order=${started.orderId}`);
+    } finally {
+      setPending(false);
+    }
+  }
+
+  return (
+    <form onSubmit={pay} className="space-y-4">
+      <Notice tone="info">
+        現在はテスト用の支払いモードです。カード情報の入力はなく、実際の請求は行われません。
+      </Notice>
+      <FormFooter
+        agreements={agreements}
+        error={error}
+        disabled={pending || !agreements.ok}
+        pending={pending}
+      />
+    </form>
+  );
+}
+
+function useAgreements() {
+  const [agreeTerms, setAgreeTerms] = useState(false);
+  const [agreeCancelPolicy, setAgreeCancelPolicy] = useState(false);
+  return {
+    values: { agreeTerms, agreeCancelPolicy },
+    ok: agreeTerms && agreeCancelPolicy,
+    setAgreeTerms,
+    setAgreeCancelPolicy,
+  };
+}
+
+function FormFooter({
+  agreements,
+  error,
+  disabled,
+  pending,
+}: {
+  agreements: ReturnType<typeof useAgreements>;
+  error: FormError;
+  disabled: boolean;
+  pending: boolean;
+}) {
+  return (
+    <>
       <label className="flex items-start gap-2 text-sm">
         <input
           type="checkbox"
-          checked={agreeTerms}
-          onChange={(e) => setAgreeTerms(e.target.checked)}
+          checked={agreements.values.agreeTerms}
+          onChange={(e) => agreements.setAgreeTerms(e.target.checked)}
           className="mt-1"
         />
         <span>
@@ -103,8 +187,8 @@ function PaymentForm({ total }: { total: number }) {
       <label className="flex items-start gap-2 text-sm">
         <input
           type="checkbox"
-          checked={agreeCancelPolicy}
-          onChange={(e) => setAgreeCancelPolicy(e.target.checked)}
+          checked={agreements.values.agreeCancelPolicy}
+          onChange={(e) => agreements.setAgreeCancelPolicy(e.target.checked)}
           className="mt-1"
         />
         <span>
@@ -124,14 +208,10 @@ function PaymentForm({ total }: { total: number }) {
           )}
         </Notice>
       )}
-      <Button
-        type="submit"
-        className="w-full"
-        disabled={!stripe || pending || !agreeTerms || !agreeCancelPolicy}
-      >
+      <Button type="submit" className="w-full" disabled={disabled}>
         {pending ? "処理中…" : "支払う"}
       </Button>
       <p className="text-xs text-zinc-500">お支払い手続きの有効期限は15分です。</p>
-    </form>
+    </>
   );
 }

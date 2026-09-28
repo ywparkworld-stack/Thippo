@@ -1,4 +1,5 @@
-import { onboardingState } from "@thippo/payments";
+import { isStubId, onboardingState } from "@thippo/payments";
+import { isStubPayments } from "@thippo/payments/mode";
 import { Button, Card, Notice } from "@thippo/ui";
 import { openStripeDashboardAction, startStripeOnboardingAction } from "../actions/onboarding";
 import { requireHost } from "../lib/host";
@@ -15,6 +16,8 @@ export default async function OnboardingPage(props: PageProps<"/onboarding">) {
   const { host } = await requireHost("/onboarding");
   const searchParams = await props.searchParams;
   const state = onboardingState(host);
+  const stub = isStubPayments();
+  const stubAccount = isStubId(host.stripe_account_id);
   return (
     <div className="mx-auto max-w-2xl space-y-4">
       {searchParams.stripe === "returned" && state !== "complete" && (
@@ -35,15 +38,25 @@ export default async function OnboardingPage(props: PageProps<"/onboarding">) {
           売上の受け取りには Stripe での登録が必要です。法人・個人事業主のどちらでも登録できます。
           登録が完了するまで、スペースは公開できません。売上は毎月23日に入金されます。
         </p>
+        {(stub || stubAccount) && (
+          <Notice tone="info">
+            現在はテスト用の支払いモードです。Stripe
+            にはつながず、登録を始めるとすぐに登録済みになります（実際の入金はありません）。
+          </Notice>
+        )}
         <Notice tone={state === "complete" ? "success" : "warning"}>{STATE_TEXT[state]}</Notice>
         {state !== "complete" && state !== "pending_verification" && (
           <form action={startStripeOnboardingAction}>
             <Button type="submit">
-              {state === "not_started" ? "Stripe で登録を始める" : "登録を続ける"}
+              {stub
+                ? "入金先を登録する（テスト）"
+                : state === "not_started"
+                  ? "Stripe で登録を始める"
+                  : "登録を続ける"}
             </Button>
           </form>
         )}
-        {host.details_submitted && (
+        {host.details_submitted && !stubAccount && (
           <form action={openStripeDashboardAction}>
             <Button type="submit" variant="secondary">
               Stripe の管理画面を開く

@@ -4,6 +4,7 @@ import Stripe from "stripe";
 import { STRIPE_CONNECT } from "@thippo/core";
 import { createSupabaseServiceClient } from "@thippo/db/admin";
 import { accountFlags } from "./accounts";
+import { isStubId, isStubPayments, STUB_PREFIX } from "./mode";
 
 export { accountFlags, onboardingState } from "./accounts";
 
@@ -99,6 +100,34 @@ export async function syncConnectAccount(account: Stripe.Account): Promise<void>
     .update(accountFlags(account))
     .eq("stripe_account_id", account.id);
   if (error) throw new Error(`failed to sync Stripe account ${account.id}: ${error.message}`);
+}
+
+/**
+ * stub（D37）：Stripe につながずに、入金先の登録が済んだものとして hosts に記録する。
+ * すでに Stripe のアカウントがある貸出主は変えない。
+ */
+export async function completeStubConnectAccount(hostId: string): Promise<void> {
+  if (!isStubPayments()) throw new Error("stub_payments_disabled");
+  const service = createSupabaseServiceClient();
+  const { data: host, error: readError } = await service
+    .from("hosts")
+    .select("stripe_account_id")
+    .eq("id", hostId)
+    .single();
+  if (readError || !host) throw new Error(`host ${hostId} not found`);
+  if (host.stripe_account_id && !isStubId(host.stripe_account_id)) {
+    throw new Error("host already has a Stripe account");
+  }
+  const { error } = await service
+    .from("hosts")
+    .update({
+      stripe_account_id: STUB_PREFIX.account + hostId,
+      charges_enabled: true,
+      payouts_enabled: true,
+      details_submitted: true,
+    })
+    .eq("id", hostId);
+  if (error) throw new Error(`failed to save stub account: ${error.message}`);
 }
 
 export async function retrieveAndSyncAccount(accountId: string): Promise<Stripe.Account> {

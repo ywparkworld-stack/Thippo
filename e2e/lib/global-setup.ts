@@ -10,6 +10,7 @@ import { env } from "./env";
  * - 運営のアカウント（admin ロールは DB でしか付与できない。docs/admin-access.md と同じ手順）
  * - Stripe のテストモードの連結アカウントを持つ貸出主と、公開中のスペース（毎日 0:00〜24:00 営業）
  * 貸出主の Stripe Connect のオンボーディングは画面を自動で操作できないため、登録済みのアカウントを使う。
+ * テスト用の支払いモード（PAYMENTS_MODE=stub。付録 D37）では、Stripe のアカウントの代わりに stub の id を使う。
  */
 /** メールアドレスとパスワードでログインするための auth.identities の行（Supabase Auth が必要とする） */
 async function addEmailIdentity(db: pg.Client, email: string) {
@@ -24,7 +25,9 @@ async function addEmailIdentity(db: pg.Client, email: string) {
 }
 
 export default async function globalSetup() {
-  if (!env.connectedAccountId) throw new Error("STRIPE_TEST_CONNECTED_ACCOUNT_ID is required");
+  if (!env.connectedAccountId) {
+    throw new Error("STRIPE_TEST_CONNECTED_ACCOUNT_ID is required (or set PAYMENTS_MODE=stub)");
+  }
   const spaceName = `E2E会議室 ${randomUUID().slice(0, 6)}`;
   await withDb(async (db) => {
     // 運営

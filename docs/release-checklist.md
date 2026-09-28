@@ -20,7 +20,8 @@ SPEC §13-11。上から順に確認し、すべてにチェックが付いた�
 - [ ] Stripe（本番モード）：Connect の設定（Express・日本・ブランディング）を行った
 - [ ] Stripe の Webhook を2つ登録し、署名シークレットを設定した（[stripe.md](stripe.md)）
 - [ ] Resend：送信ドメインの SPF・DKIM・DMARC を設定し、テスト送信が届いた
-- [ ] Vercel：3プロジェクトの環境変数を production の値にした（Stripe は本番キー、`APP_ENV=production`）
+- [ ] Vercel：3プロジェクトの環境変数を production の値にした（Stripe は本番キー、`APP_ENV=production`、`PAYMENTS_MODE` は `stripe` か未設定）
+- [ ] staging で `PAYMENTS_MODE=stub` を使っていた場合、stub で登録済みにした貸出主（`stripe_account_id` が `acct_stub_` で始まる）が本番の DB にない
 - [ ] Vercel：利用者サイトのプロジェクトが Pro 以上で、Cron Jobs が7つ登録されている
 - [ ] Sentry：3プロジェクトの DSN を設定し、テストのエラーが届いた。アラートを設定した
 - [ ] `CRON_SECRET` を十分に長いランダムな値にした

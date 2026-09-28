@@ -3,6 +3,7 @@ import { IDENTITY, addDays, toTokyoDate } from "@thippo/core";
 import { createSupabaseServiceClient } from "@thippo/db/admin";
 import { issueMonthlyStatement } from "@thippo/invoice/statements";
 import { sendBookingReminderEmail, sendStatementIssuedEmails } from "@thippo/mail/booking-emails";
+import { STUB_PREFIX } from "@thippo/payments";
 import { stripe } from "@thippo/payments/server";
 
 /** 利用終了時刻を過ぎた予約を completed にする（SPEC §7-9。15分ごと） */
@@ -82,6 +83,8 @@ export async function syncStripeFees(limit = 100) {
     .eq("status", "paid")
     .is("stripe_fee_actual", null)
     .not("stripe_charge_id", "is", null)
+    // テスト用の支払い（付録 D37）は Stripe にないため取得しない
+    .not("stripe_charge_id", "like", `${STUB_PREFIX.charge}%`)
     .order("paid_at")
     .limit(limit);
   let updated = 0;

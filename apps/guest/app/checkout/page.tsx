@@ -8,6 +8,7 @@ import {
   toTokyoMinutes,
 } from "@thippo/core";
 import { requireAppSession } from "@thippo/auth/server";
+import { isStubPayments } from "@thippo/payments/mode";
 import { Card, Notice, formatYen } from "@thippo/ui";
 import { evaluateCartItems, loadServerCart } from "../lib/cart";
 import { CheckoutForm } from "./checkout-form";
@@ -81,6 +82,7 @@ export default async function CheckoutPage() {
         <CheckoutForm
           total={total}
           publishableKey={process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? ""}
+          stub={isStubPayments()}
         />
         <Link href="/cart" className="block text-center text-sm text-brand-700 underline">
           予約カゴに戻る

@@ -2,10 +2,12 @@
 
 import { z } from "zod";
 import { requireAppSession } from "@thippo/auth/server";
+import { sendOrderConfirmedEmails } from "@thippo/mail/booking-emails";
 import {
   CHECKOUT_ERROR_MESSAGES,
   checkoutErrorCode,
   closeOwnPendingOrders,
+  completeStubPayment,
   createOrderAndPaymentIntent,
 } from "@thippo/payments/checkout";
 
@@ -68,5 +70,31 @@ export async function startPaymentAction(input: unknown): Promise<StartPaymentRe
         "multiple_hosts",
       ].includes(code),
     };
+  }
+}
+
+/**
+ * テスト用の支払いモード（付録 D37）で「支払う」を押したとき。Webhook の payment_intent.succeeded の代わりに、
+ * 本人の注文を支払い済みにして確認メールを送る。stub でなければ（本番を含む）例外になり、何もしない。
+ */
+export async function completeStubPaymentAction(
+  orderId: unknown,
+): Promise<{ ok: true } | { ok: false; message: string }> {
+  const { userId } = await requireAppSession("guest", "/checkout");
+  const id = z.uuid().safeParse(orderId);
+  if (!id.success) return { ok: false, message: "注文が見つかりません。" };
+  try {
+    const outcome = await completeStubPayment(id.data, userId);
+    if (outcome.kind === "expired") {
+      return {
+        ok: false,
+        message: "お支払いの期限を過ぎました。予約カゴからもう一度お手続きください。",
+      };
+    }
+    await sendOrderConfirmedEmails(outcome.orderId);
+    return { ok: true };
+  } catch (e) {
+    console.error(`[checkout:stub] ${(e as Error).message}`);
+    return { ok: false, message: "お支払いに失敗しました。時間をおいてもう一度お試しください。" };
   }
 }
