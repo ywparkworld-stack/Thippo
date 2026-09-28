@@ -1,0 +1,7 @@
+<p>thippo のメールアドレスを {{ .NewEmail }} に変更するご依頼を受け付けました。</p>
+<p>
+  <a href="{{ .RedirectTo }}/auth/confirm?token_hash={{ .TokenHash }}&type=email_change"
+    >変更を確認する</a
+  >
+</p>
+<p>このメールに心当たりがない場合は、破棄してください。</p>

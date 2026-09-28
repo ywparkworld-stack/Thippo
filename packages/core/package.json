@@ -1,0 +1,23 @@
+{
+  "name": "@thippo/core",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@thippo/eslint-config": "workspace:*",
+    "eslint": "^9.39.1",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.4"
+  },
+  "dependencies": {
+    "zod": "^4.6.5"
+  }
+}

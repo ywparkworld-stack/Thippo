@@ -1,0 +1,29 @@
+{
+  "name": "@thippo/mail",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./templates": "./src/templates.ts",
+    "./send": "./src/send.ts",
+    "./booking-emails": "./src/booking-emails.ts"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@thippo/core": "workspace:*",
+    "@thippo/db": "workspace:*",
+    "server-only": "^0.0.1"
+  },
+  "devDependencies": {
+    "@thippo/eslint-config": "workspace:*",
+    "@types/node": "^22.19.1",
+    "eslint": "^9.39.1",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.4"
+  }
+}

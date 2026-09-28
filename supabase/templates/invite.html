@@ -1,0 +1,11 @@
+<p>thippo へのスペース掲載のお申し込みを承認しました。</p>
+<p>下のリンクを開いて、貸出主センターのパスワードを設定してください。</p>
+<p>
+  <a
+    href="{{ .RedirectTo }}/auth/confirm?token_hash={{ .TokenHash }}&type=invite&next=/password/reset"
+    >パスワードを設定する</a
+  >
+</p>
+<p>
+  パスワードの設定後、会社情報の登録と Stripe での入金先の登録を行うと、スペースを公開できます。
+</p>
