@@ -60,6 +60,8 @@ TODO(要確認): 本番のドメイン（SPEC §16）。
 - Install Command：`pnpm install --frozen-lockfile`（Root Directory の外の workspace も含めるため、「Include files outside of the Root Directory」をオンにする）
 - Node.js：22.x
 - Function Region：`hnd1`（東京）
+- プロジェクトを作るときに選んだフォルダの名前が、そのままプロジェクト名になる。`packages/*`（共有のコード）はアプリではないため、選ぶとビルドが失敗する。必ず `apps/guest`・`apps/host`・`apps/admin` のどれかを選ぶ。
+- Root Directory などの設定を変えても、すでにあるデプロイはやり直されない。変えたあとは Deployments の最新のデプロイで「Redeploy」を押すか、次の push を待つ。
 
 ### 環境変数
 
