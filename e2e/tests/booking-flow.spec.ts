@@ -61,14 +61,14 @@ test("会員登録から返金まで", async ({ browser }) => {
   const confirmMail = await waitForMail(email, "メールアドレスの確認");
   await guest.goto(firstLink(confirmMail, "/auth/confirm"));
 
-  // ログインして本人確認書類を提出
-  if (!guest.url().includes("/mypage")) {
-    await guest.goto(`${env.guestUrl}/login`);
+  // 本人確認書類を提出（確認のリンクでログイン済みになる。なっていなければログインする）
+  await guest.goto(`${env.guestUrl}/mypage/identity`);
+  if (guest.url().includes("/login")) {
     await guest.getByLabel("メールアドレス").fill(email);
     await guest.getByLabel("パスワード").fill(password);
     await guest.getByRole("button", { name: "ログイン" }).click();
+    await guest.waitForURL(/\/mypage\/identity/);
   }
-  await guest.goto(`${env.guestUrl}/mypage/identity`);
   await guest.getByLabel("書類の種類").selectOption("drivers_license");
   await guest
     .getByLabel("表面の画像")

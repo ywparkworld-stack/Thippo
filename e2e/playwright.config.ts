@@ -19,6 +19,9 @@ export default defineConfig({
     locale: "ja-JP",
     timezoneId: "Asia/Tokyo",
     trace: "retain-on-failure",
+    // 画面の操作が止まったら、テスト全体の制限時間を待たずに失敗させる
+    actionTimeout: 30_000,
+    navigationTimeout: 60_000,
     screenshot: "only-on-failure",
     video: "retain-on-failure",
   },
