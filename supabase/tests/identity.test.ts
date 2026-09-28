@@ -130,11 +130,26 @@ describe("提出後のファイル", () => {
         [guest],
       );
       expect(upd.rowCount).toBe(0);
-      const del = await db.query(
-        "delete from storage.objects where bucket_id = 'identity-documents' and owner = $1",
+      // 本物の Supabase Storage は、テーブルからの直接の削除をトリガー（storage.protect_delete）で拒否する。
+      // RLS で0件になるか、そのトリガーで拒否されるかのどちらでも、ファイルが残っていればよい
+      await db.query("savepoint del");
+      try {
+        const del = await db.query(
+          "delete from storage.objects where bucket_id = 'identity-documents' and owner = $1",
+          [guest],
+        );
+        expect(del.rowCount).toBe(0);
+        await db.query("release savepoint del");
+      } catch (e) {
+        expect((e as Error).message).toMatch(/Direct deletion from storage tables is not allowed/);
+        await db.query("rollback to savepoint del");
+      }
+      await db.query("reset role");
+      const left = await db.query(
+        "select count(*)::int as n from storage.objects where bucket_id = 'identity-documents' and owner = $1",
         [guest],
       );
-      expect(del.rowCount).toBe(0);
+      expect(left.rows[0].n).toBeGreaterThan(0);
     });
   });
 });

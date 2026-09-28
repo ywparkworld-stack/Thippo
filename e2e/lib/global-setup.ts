@@ -34,10 +34,10 @@ export default async function globalSetup() {
     await db.query(
       `insert into auth.users (instance_id, id, aud, role, email, encrypted_password, email_confirmed_at, created_at, updated_at,
          raw_app_meta_data, raw_user_meta_data, confirmation_token, recovery_token, email_change_token_new, email_change)
-       select '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated', $1,
-              extensions.crypt($2, extensions.gen_salt('bf')), now(), now(), now(),
+       select '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated', $1::text,
+              extensions.crypt($2::text, extensions.gen_salt('bf')), now(), now(), now(),
               '{"provider":"email","providers":["email"]}', '{}', '', '', '', ''
-       where not exists (select 1 from auth.users where email = $1)`,
+       where not exists (select 1 from auth.users where email = $1::text)`,
       [env.adminEmail, env.adminPassword],
     );
     await db.query(
