@@ -51,15 +51,17 @@ TODO(要確認): 本番のドメイン（SPEC §16）。
 
 同じ GitHub リポジトリから3つのプロジェクトを作る。
 
-| プロジェクト | Root Directory | Framework | 備考                                                                               |
-| ------------ | -------------- | --------- | ---------------------------------------------------------------------------------- |
-| thippo-guest | `apps/guest`   | Next.js   | 定期実行（`vercel.json` の crons）はこのプロジェクト。Pro 以上のプラン（付録 D30） |
-| thippo-host  | `apps/host`    | Next.js   |                                                                                    |
-| thippo-admin | `apps/admin`   | Next.js   | [admin-access.md](admin-access.md) の前段のアクセス制限を設定する                  |
+| プロジェクト | Root Directory | Framework | 備考                                                                                             |
+| ------------ | -------------- | --------- | ------------------------------------------------------------------------------------------------ |
+| thippo-guest | `apps/guest`   | Next.js   | 定期実行は GitHub Actions からこのプロジェクトを呼ぶ（付録 D38。[operations.md](operations.md)） |
+| thippo-host  | `apps/host`    | Next.js   |                                                                                                  |
+| thippo-admin | `apps/admin`   | Next.js   | [admin-access.md](admin-access.md) の前段のアクセス制限を設定する                                |
 
 - Install Command：`pnpm install --frozen-lockfile`（Root Directory の外の workspace も含めるため、「Include files outside of the Root Directory」をオンにする）
 - Node.js：22.x
 - Function Region：`hnd1`（東京）
+- プロジェクトを作るときに選んだフォルダの名前が、そのままプロジェクト名になる。`packages/*`（共有のコード）はアプリではないため、選ぶとビルドが失敗する。必ず `apps/guest`・`apps/host`・`apps/admin` のどれかを選ぶ。
+- Root Directory などの設定を変えても、すでにあるデプロイはやり直されない。変えたあとは Deployments の最新のデプロイで「Redeploy」を押すか、次の push を待つ。
 
 ### 環境変数
 
@@ -97,4 +99,4 @@ TODO(要確認): 本番のドメイン（SPEC §16）。
 1. `https://<利用者サイト>/` が表示される。
 2. 運営管理：Cloudflare Access を通らない URL（`*.vercel.app`）は 403、通ると `/login` が表示される。
 3. [release-checklist.md](release-checklist.md) の「staging での通しの確認」を行う。
-4. Vercel の Cron Jobs の画面で、7つのジョブが登録されていることを確認する。
+4. GitHub の Secrets に `CRON_BASE_URL`・`CRON_SECRET` を登録し、Actions の「Cron」を「Run workflow」で1回実行して成功することを確認する。
