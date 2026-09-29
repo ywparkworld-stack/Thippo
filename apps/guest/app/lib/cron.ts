@@ -1,7 +1,7 @@
 import "server-only";
 import { timingSafeEqual } from "node:crypto";
 
-/** Vercel Cron からの呼び出しか（Authorization: Bearer <CRON_SECRET>） */
+/** 定期実行（GitHub Actions の Cron。付録 D38）からの呼び出しか（Authorization: Bearer <CRON_SECRET>） */
 export function isAuthorizedCron(request: Request): boolean {
   const secret = process.env.CRON_SECRET;
   if (!secret) return false;

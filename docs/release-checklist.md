@@ -22,7 +22,7 @@ SPEC §13-11。上から順に確認し、すべてにチェックが付いた�
 - [ ] Resend：送信ドメインの SPF・DKIM・DMARC を設定し、テスト送信が届いた
 - [ ] Vercel：3プロジェクトの環境変数を production の値にした（Stripe は本番キー、`APP_ENV=production`、`PAYMENTS_MODE` は `stripe` か未設定）
 - [ ] staging で `PAYMENTS_MODE=stub` を使っていた場合、stub で登録済みにした貸出主（`stripe_account_id` が `acct_stub_` で始まる）が本番の DB にない
-- [ ] Vercel：利用者サイトのプロジェクトが Pro 以上で、Cron Jobs が7つ登録されている
+- [ ] 定期実行：GitHub の Secrets の `CRON_BASE_URL` を本番の URL に、`CRON_SECRET` を本番と同じ値にした。Actions の「Cron」が成功している
 - [ ] Sentry：3プロジェクトの DSN を設定し、テストのエラーが届いた。アラートを設定した
 - [ ] `CRON_SECRET` を十分に長いランダムな値にした
 
@@ -50,7 +50,7 @@ SPEC §13-11。上から順に確認し、すべてにチェックが付いた�
 - [ ] production の Supabase にマイグレーションを適用した（staging と同じ最新のもの）
 - [ ] production の3プロジェクトをデプロイし、各サイトが表示される
 - [ ] 本番モードで少額の実際の決済と全額返金を1回行い、Stripe の画面で送金・差し戻し・手数料を確認した
-- [ ] Sentry にエラーが出ていない。Vercel の Cron Jobs が動いている（ログで確認）
+- [ ] Sentry にエラーが出ていない。GitHub Actions の「Cron」が定期的に成功している
 
 ## E. リリース後の運用
 

@@ -292,3 +292,4 @@ exclude using gist (space_id with =, period with &&)
 | D35 | E2E テスト | GitHub Actions でローカルの Supabase と Stripe のテストモードを使って実行する。Stripe のテストモードのキーは GitHub の Secrets に登録する | 2026-10-04 |
 | D36 | 退会 | マイページに退会の機能を追加する。これからの予約（確定済み・支払い待ち）がある間は退会できない。退会後はログインできない | 2026-10-04 |
 | D37 | Stripe の実装の後回し | 運営側の事情で Stripe の接続を後回しにする。Stripe につながずに支払い・返金・入金先の登録が最後まで通る「テスト用の支払いモード」（PAYMENTS_MODE=stub）を用意し、形だけ完成させる。本番（APP_ENV=production）では使えない。Stripe の実装は残し、PAYMENTS_MODE=stripe に切り替えれば戻る | 2026-09-28 |
+| D38 | 定期実行の仕組み（D30 の変更） | Vercel の Hobby プランを使うため、Vercel Cron をやめ、GitHub Actions のスケジュール（`.github/workflows/cron.yml`）から利用者サイトの `/api/cron/*` を `CRON_SECRET` 付きで呼ぶ。数分の遅れは許容する。1回の実行は60秒まで | 2026-09-29 |

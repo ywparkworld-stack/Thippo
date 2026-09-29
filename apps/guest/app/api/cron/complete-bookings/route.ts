@@ -5,4 +5,5 @@ import { completeFinishedBookings } from "../../../lib/jobs";
 export const GET = cronRoute("complete-bookings", () => completeFinishedBookings());
 
 // PDF の作成やメールの送信に時間がかかる場合がある
-export const maxDuration = 300;
+// Vercel の Hobby プランの上限（60秒）に合わせる。途中で終わっても、次の実行で続きを処理する（どれも2回実行してよい）
+export const maxDuration = 60;
