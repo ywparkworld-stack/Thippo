@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { requireAppSession } from "@thippo/auth/server";
+import { createSupabaseServiceClient } from "@thippo/db/admin";
 import { Card, Notice, formatYen } from "@thippo/ui";
 import { monthLabel, parseMonth, shiftMonth } from "./lib/format";
 
@@ -8,7 +9,7 @@ export default async function Home(props: PageProps<"/">) {
   const { supabase } = await requireAppSession("admin", "/");
   const sp = await props.searchParams;
   const month = parseMonth(sp.month);
-  const [{ data: summary }, identity, applications, refunds] = await Promise.all([
+  const [{ data: summary }, identity, applications, refunds, mail] = await Promise.all([
     supabase.rpc("admin_month_summary", { p_month: `${month}-01` }),
     supabase
       .from("identity_documents")
@@ -19,6 +20,11 @@ export default async function Home(props: PageProps<"/">) {
       .select("id", { count: "exact", head: true })
       .eq("status", "pending"),
     supabase.from("refunds").select("id", { count: "exact", head: true }).eq("status", "failed"),
+    // 送信待ちのメール（手作業で送る。付録 D39）
+    createSupabaseServiceClient()
+      .from("notifications")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "queued"),
   ]);
   const s = summary?.[0];
   const tiles: [string, string, string?][] = [
@@ -38,6 +44,7 @@ export default async function Home(props: PageProps<"/">) {
     ["本人確認の審査待ち", identity.count ?? 0, "/identity"],
     ["掲載申込の審査待ち", applications.count ?? 0, "/host-applications"],
     ["失敗した返金", refunds.count ?? 0, "/refunds"],
+    ["送信待ちのメール", mail.count ?? 0, "/mail"],
   ];
   return (
     <div className="space-y-6">
@@ -50,7 +57,7 @@ export default async function Home(props: PageProps<"/">) {
           <Link href={`/?month=${shiftMonth(month, 1)}`}>次の月 →</Link>
         </div>
       </div>
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-4">
         {todo.map(([label, n, href]) => (
           <Link key={label} href={href}>
             <Card className={n > 0 ? "border-amber-300" : ""}>

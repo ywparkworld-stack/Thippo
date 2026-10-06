@@ -2,8 +2,10 @@ import { describe, expect, it } from "vitest";
 import { isStubId, paymentsMode } from "../src/mode";
 
 describe("paymentsMode（付録 D37）", () => {
-  it("指定がなければ stripe", () => {
-    expect(paymentsMode({})).toBe("stripe");
+  it("指定がなければ、Stripe のキーがあるときは stripe、ないときは stub（D39）", () => {
+    expect(paymentsMode({ STRIPE_SECRET_KEY: "sk_test_x" })).toBe("stripe");
+    expect(paymentsMode({})).toBe("stub");
+    expect(() => paymentsMode({ APP_ENV: "production" })).toThrow(/production/);
     expect(paymentsMode({ PAYMENTS_MODE: " Stub " })).toBe("stub");
   });
 

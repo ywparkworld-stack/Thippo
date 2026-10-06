@@ -1,5 +1,8 @@
 # デプロイ手順（staging・production）
 
+> **当分は手作業での運用（付録 D39）。** Vercel と Supabase だけを使う手順は [manual-setup.md](manual-setup.md) を見る。
+> このページは、Stripe・メール送信・自動の定期実行などを使う本来の構成の手順。
+
 SPEC §2・§13-11。付録 D34（手順書と設定ファイルは実装側が用意し、作業は運営が行う）。
 staging と production は同じ手順で、別々の Supabase プロジェクト・Vercel プロジェクト・Stripe のモードを使う。
 
@@ -81,7 +84,6 @@ TODO(要確認): 本番のドメイン（SPEC §16）。
 | `RESEND_API_KEY`・`MAIL_FROM`                                                                     | ○     | ○    | ○     |
 | `CONTACT_EMAIL`・`ADMIN_NOTIFICATION_EMAIL`                                                       | ○     |      |       |
 | `OPERATOR_COMPANY_NAME`・`OPERATOR_ADDRESS`・`OPERATOR_INVOICE_REGISTRATION_NUMBER`               | ○     | ○    | ○     |
-| `CRON_SECRET`                                                                                     | ○     |      |       |
 | `ADMIN_ACCESS_GATE`・`CF_ACCESS_TEAM_DOMAIN`・`CF_ACCESS_AUD`                                     |       |      | ○     |
 | `NEXT_PUBLIC_SENTRY_DSN`（アプリごとの DSN）・`SENTRY_AUTH_TOKEN`・`SENTRY_ORG`・`SENTRY_PROJECT` | ○     | ○    | ○     |
 
@@ -99,4 +101,4 @@ TODO(要確認): 本番のドメイン（SPEC §16）。
 1. `https://<利用者サイト>/` が表示される。
 2. 運営管理：Cloudflare Access を通らない URL（`*.vercel.app`）は 403、通ると `/login` が表示される。
 3. [release-checklist.md](release-checklist.md) の「staging での通しの確認」を行う。
-4. GitHub の Secrets に `CRON_BASE_URL`・`CRON_SECRET` を登録し、Actions の「Cron」を「Run workflow」で1回実行して成功することを確認する。
+4. 運営管理の「定期処理」の画面で各処理を1回ずつ実行し、成功することを確認する（定期実行の仕組みを用意するまでは手作業。付録 D39）。

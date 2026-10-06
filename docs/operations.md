@@ -1,43 +1,39 @@
 # 定期実行とメール
 
-## 定期実行（SPEC §11・付録 D30）
+## 定期実行（SPEC §11・付録 D30・D38・D39）
 
-GitHub Actions のスケジュール（`.github/workflows/cron.yml`）で、利用者サイト（`apps/guest`）の Route Handler を呼ぶ（付録 D38）。
-Vercel の Hobby プランでは1日1回より多い Cron を登録できないため、Vercel Cron は使わない。
+**当分は自動では動かさない（付録 D39）。** 運営が運営管理の **「定期処理」**（`/jobs`）の画面でボタンを押して実行する。
+手順と目安の間隔は [manual-setup.md](manual-setup.md) の「毎日の作業」。
+処理の本体は `apps/admin/app/lib/jobs.ts`。支払い期限切れの注文は、利用者の購入手続きのときにも閉じる。
 
-- GitHub の Secrets に `CRON_BASE_URL`（利用者サイトの本番の URL）と `CRON_SECRET`（Vercel の環境変数と同じ値）を登録する。
-  どちらかがなければ、何もせずに終わる。
-- 呼び出しには `Authorization: Bearer <CRON_SECRET>` が必要。
-- スケジュールは既定のブランチ（`claude/awesome-hypatia-hPsoe`）でだけ動く。混んでいると数分遅れることがある。
-- リポジトリに60日間動きがないと、GitHub がスケジュールを止める。止まったら Actions の画面で有効にし直す。
-- 失敗すると GitHub Actions の実行が赤くなる（GitHub から通知が届く）。Actions の画面の「Run workflow」で、処理を選んで手動でも実行できる。
-- 1回の実行は60秒まで（Hobby プランの上限）。途中で終わっても、次の実行で続きを処理する。
+以前の自動実行（Vercel Cron・GitHub Actions のスケジュール）は外した。戻すときは付録 D30・D38 の記録を参照する。
 
-| パス                             | スケジュール（UTC） | 東京時間               | 内容                                                                                          |
-| -------------------------------- | ------------------- | ---------------------- | --------------------------------------------------------------------------------------------- |
-| `/api/cron/expire-orders`        | `*/5 * * * *`       | 5分ごと                | 15分以上 pending の注文を expired にして枠を解放し、PaymentIntent を取り消す                  |
-| `/api/cron/complete-bookings`    | `*/15 * * * *`      | 15分ごと               | 利用終了時刻を過ぎた予約を completed にする                                                   |
-| `/api/cron/reminders-two-hours`  | `*/15 * * * *`      | 15分ごと               | 利用開始2時間前のリマインド（D31）                                                            |
-| `/api/cron/reminders-day-before` | `0 9 * * *`         | 毎日 18:00             | 翌日の予約のリマインド（D31）                                                                 |
-| `/api/cron/stripe-fees`          | `7 * * * *`         | 毎時                   | 実際の Stripe 手数料（balance_transaction の stripe_fee）を保存する                           |
-| `/api/cron/monthly-statements`   | `10 * 1 * *`        | 毎月1日 9:10〜（毎時） | 前月分の月次明細・請求書 PDF を発行し、貸出主に通知する                                       |
-| `/api/cron/cleanup`              | `30 18 * * *`       | 毎日 3:30              | レート制限のカウンター・提出されなかった本人確認のファイル・保存期間を過ぎた書類の削除（D33） |
+処理の一覧（目安の間隔は手作業の運用のもの）：
+
+| 処理（`jobs.ts` のキー） | 目安の間隔（手作業）   | 内容                                                                                          |
+| ------------------------ | ---------------------- | --------------------------------------------------------------------------------------------- |
+| `expire-orders`          | 随時（購入時にも自動） | 15分以上 pending の注文を expired にして枠を解放する                                          |
+| `complete-bookings`      | 1日1回以上             | 利用終了時刻を過ぎた予約を completed にする                                                   |
+| `reminders-two-hours`    | 利用がある日はこまめに | 利用開始2時間前のリマインド（D31）                                                            |
+| `reminders-day-before`   | 毎日夕方               | 翌日の予約のリマインド（D31）                                                                 |
+| `monthly-statements`     | 毎月1日以降            | 前月分の月次明細・請求書 PDF を発行し、貸出主に通知する                                       |
+| `cleanup`                | 1日1回程度             | レート制限のカウンター・提出されなかった本人確認のファイル・保存期間を過ぎた書類の削除（D33） |
+| `stripe-fees`            | Stripe を使うときだけ  | 実際の Stripe 手数料（balance_transaction の stripe_fee）を保存する                           |
 
 - どの処理も、同じものを2回実行しても結果が変わらないように作っている（リマインドは送信済みの印を付けてから送る、明細は1か月に1回だけ発行など）。
-- 失敗すると 500 を返し、Vercel のログと GitHub Actions の実行結果に残る。
+- 実行したこと・結果・失敗は操作ログ（`admin.job_run`）に残る。
 - 本人確認書類の保存期間は `packages/core/src/config.ts` の `IDENTITY.documentRetentionDaysAfterWithdrawal`。
   TODO(要確認): 期間が決まるまでは `null` で、書類は削除しない。
-
-手動で実行するとき：
-
-```sh
-curl -H "Authorization: Bearer $CRON_SECRET" https://<利用者サイト>/api/cron/complete-bookings
-```
 
 ## メール（SPEC §12）
 
 - 文面は `packages/mail/src/templates.ts` にまとめている（会員登録の確認・パスワード再設定・貸出主の招待は Supabase Auth が送るため `supabase/templates/`）。
-- 送信は Resend。送ったメールは `notifications` に記録し、同じキーのメールは二重に送らない。
+- 送り方は環境変数で決まる（`packages/mail/src/mailers.ts` の `mailModeFromEnv`。付録 D39）。
+  - `RESEND_API_KEY`・`MAIL_FROM` があれば Resend で送る。
+  - `APP_ENV=development`（ローカル）・テストでは送らずにログに出す。
+  - それ以外（**当分の運用**）は送らずに `notifications` に「送信待ち（queued）」で本文ごと残す。運営が運営管理の
+    **「送信待ちのメール」**（`/mail`）で内容をコピーして自分のメールソフトから送り、「送信済みにする」を押す。
+- 作ったメールは `notifications` に記録し、同じキーのメールは二重に作らない（手作業のときは送信待ちも含めて確かめる）。
 - 送信に失敗しても元の処理（予約の確定・キャンセルなど）は取り消さない。`notifications.status = failed` を確認する。
 
 | メール                   | いつ                               | 宛先                                    |

@@ -6,6 +6,7 @@
 
 Stripe の準備ができるまで、Stripe につながずにサービス全体を動かすためのモード（SPEC 付録 D37）。
 環境変数 `PAYMENTS_MODE=stub` で有効になり、Stripe のキー・Webhook は不要になる。
+`PAYMENTS_MODE` を入れない場合も、`STRIPE_SECRET_KEY` がなければ stub になる（付録 D39）。
 
 | 操作                   | stub での動き                                                                                                             |
 | ---------------------- | ------------------------------------------------------------------------------------------------------------------------- |
@@ -59,7 +60,7 @@ stripe listen --forward-connect-to localhost:3000/api/webhooks/stripe-connect
    `application_fee_amount` = 予約ごとの application fee の合計、`metadata.order_id` = 注文の id。
 3. `payment_intent.succeeded` で注文を paid・予約を confirmed にし、charge と transfer の id を保存して確認メールを送る。
    注文完了画面でも PaymentIntent の状態を確かめ、Webhook より先に戻ってきた場合も確定させる（同じ処理なので二重にはならない）。
-4. 15分以上 pending の注文は `/api/cron/expire-orders`（`CRON_SECRET` が必要）で expired にし、PaymentIntent を取り消す。
+4. 15分以上 pending の注文は、運営管理の「定期処理」の「支払い期限切れの注文を閉じる」と、購入手続きの始めに expired にし、PaymentIntent を取り消す（付録 D39）。
    それでも期限切れのあとに支払いが成功した場合は、自動で全額返金して利用者に知らせる（付録 D8）。
 
 ## キャンセルと返金（SPEC §8・§8.1）

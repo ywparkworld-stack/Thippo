@@ -45,6 +45,8 @@ const pi = (over: Partial<Stripe.PaymentIntent> = {}) =>
 beforeEach(() => {
   vi.resetAllMocks();
   vi.unstubAllEnvs();
+  // Stripe のキーがなければ stub が既定になる（D39）ため、Stripe の処理のテストでは明示する
+  vi.stubEnv("PAYMENTS_MODE", "stripe");
   chargesRetrieve.mockResolvedValue({ id: "ch_1", transfer: "tr_1" });
 });
 

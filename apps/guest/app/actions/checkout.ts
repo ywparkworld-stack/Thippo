@@ -9,6 +9,7 @@ import {
   closeOwnPendingOrders,
   completeStubPayment,
   createOrderAndPaymentIntent,
+  expireDueOrders,
 } from "@thippo/payments/checkout";
 
 export type StartPaymentResult =
@@ -37,6 +38,9 @@ export async function startPaymentAction(input: unknown): Promise<StartPaymentRe
     };
   }
   try {
+    // 支払い期限（15分）を過ぎた注文を閉じて、押さえていた枠を空ける。
+    // 定期実行をしない間（付録 D39）も、他の人の放置された注文で予約できなくならないようにする
+    await expireDueOrders().catch((e: Error) => console.error(`[checkout] expire: ${e.message}`));
     await closeOwnPendingOrders(userId);
     const payment = await createOrderAndPaymentIntent(userId);
     if (payment.total !== parsed.data.displayedTotal) {

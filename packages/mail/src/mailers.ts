@@ -40,9 +40,28 @@ export class ConsoleMailer implements Mailer {
   }
 }
 
-export function mailerFromEnv(env: NodeJS.ProcessEnv = process.env): Mailer {
-  if (env.RESEND_API_KEY && env.MAIL_FROM)
-    return new ResendMailer(env.RESEND_API_KEY, env.MAIL_FROM);
-  if (env.APP_ENV === "development" || env.NODE_ENV === "test") return new ConsoleMailer();
-  throw new Error("RESEND_API_KEY and MAIL_FROM must be set");
+/**
+ * メールの送り方（付録 D39）。
+ * - "resend"：Resend で送る（RESEND_API_KEY と MAIL_FROM があるとき）
+ * - "console"：送らずにログに出して送信済みにする（ローカル開発・テスト）
+ * - "manual"：送らずに「送信待ち」で残し、運営が運営管理の画面を見て手作業で送る（それ以外。当分の運用）
+ */
+export type MailMode = "resend" | "console" | "manual";
+
+export function mailModeFromEnv(env: NodeJS.ProcessEnv = process.env): MailMode {
+  if (env.RESEND_API_KEY && env.MAIL_FROM) return "resend";
+  if (env.APP_ENV === "development" || env.NODE_ENV === "test") return "console";
+  return "manual";
+}
+
+/** 送り方に合った Mailer。手作業で送る場合は null（送らずに記録だけする） */
+export function mailerFromEnv(env: NodeJS.ProcessEnv = process.env): Mailer | null {
+  switch (mailModeFromEnv(env)) {
+    case "resend":
+      return new ResendMailer(env.RESEND_API_KEY!, env.MAIL_FROM!);
+    case "console":
+      return new ConsoleMailer();
+    case "manual":
+      return null;
+  }
 }

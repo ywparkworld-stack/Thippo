@@ -14,7 +14,7 @@ packages/
   core/          料金計算・返金判定・下限料金・枠の計算（純粋関数）と設定値
   db/            Supabase の型定義とクライアント生成
   auth/          3アプリ共通の認証（proxy・ログイン・2段階認証・レート制限・操作ログ）
-  mail/          メールの文面（templates.ts に集約）と送信（Resend）
+  mail/          メールの文面（templates.ts に集約）と送信（Resend、または手作業で送るための記録）
   payments/      Stripe（Connect・決済・返金・Webhook の署名検証と重複処理の防止）
   invoice/       月次明細・請求書（適格請求書）の PDF
   observability/ Sentry の共通設定（個人情報を送らない）
@@ -66,6 +66,7 @@ CI では両方を実行する（`.github/workflows/ci.yml`）。
 
 ## 認証と運営管理
 
+- **当分の運用（手作業。Vercel と Supabase だけ）の準備と毎日の作業：[docs/manual-setup.md](docs/manual-setup.md)**
 - 認証の設定とロールの考え方：[docs/auth.md](docs/auth.md)
 - 運営管理のアクセス制限・admin ロールの付与：[docs/admin-access.md](docs/admin-access.md)
 - Stripe の設定と Webhook：[docs/stripe.md](docs/stripe.md)

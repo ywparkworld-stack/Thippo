@@ -22,9 +22,8 @@ SPEC §13-11。上から順に確認し、すべてにチェックが付いた�
 - [ ] Resend：送信ドメインの SPF・DKIM・DMARC を設定し、テスト送信が届いた
 - [ ] Vercel：3プロジェクトの環境変数を production の値にした（Stripe は本番キー、`APP_ENV=production`、`PAYMENTS_MODE` は `stripe` か未設定）
 - [ ] staging で `PAYMENTS_MODE=stub` を使っていた場合、stub で登録済みにした貸出主（`stripe_account_id` が `acct_stub_` で始まる）が本番の DB にない
-- [ ] 定期実行：GitHub の Secrets の `CRON_BASE_URL` を本番の URL に、`CRON_SECRET` を本番と同じ値にした。Actions の「Cron」が成功している
+- [ ] 定期実行の仕組みを決めた（当分は運営管理の「定期処理」の画面で手作業。付録 D39）
 - [ ] Sentry：3プロジェクトの DSN を設定し、テストのエラーが届いた。アラートを設定した
-- [ ] `CRON_SECRET` を十分に長いランダムな値にした
 
 ## C. staging での通しの確認（Stripe テストモード）
 

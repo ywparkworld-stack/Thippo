@@ -12,6 +12,7 @@ export function templateContext(env: NodeJS.ProcessEnv = process.env): TemplateC
 /**
  * テンプレートからメールを作って送り、notifications に記録する（SPEC §4）。
  * 送信に失敗しても例外にはせず、notifications に failed として残す（呼び出し元の処理は巻き戻さない）。
+ * メール送信サービスを使わない間（付録 D39）は送らずに「送信待ち（queued）」で残し、運営が手作業で送る。
  */
 export async function sendTemplatedEmail<T extends TemplateName>(input: {
   template: T;
@@ -20,7 +21,7 @@ export async function sendTemplatedEmail<T extends TemplateName>(input: {
   data: TemplateData<T>;
   /** 同じ通知を二重に送らないためのキー（例: "identity.rejected:<document_id>"） */
   idempotencyKey?: string;
-  mailer?: Mailer;
+  mailer?: Mailer | null;
 }): Promise<{ ok: boolean; notificationId: string | null }> {
   const render = templates[input.template] as (
     ctx: TemplateContext,
@@ -31,14 +32,15 @@ export async function sendTemplatedEmail<T extends TemplateName>(input: {
   };
   const { subject, text } = render(templateContext(), input.data);
   const service = createSupabaseServiceClient();
+  const mailer = input.mailer === undefined ? mailerFromEnv() : input.mailer;
 
-  // 同じキーで送信済みなら送らない（Webhook の再送などで二重に送らないため）
+  // 同じキーで送信済み（手作業のときは送信待ちも）なら送らない（Webhook の再送などで二重に送らないため）
   if (input.idempotencyKey) {
     const { data: sent } = await service
       .from("notifications")
       .select("id")
       .eq("template", input.template)
-      .eq("status", "sent")
+      .in("status", mailer ? ["sent"] : ["sent", "queued"])
       .eq("payload->>idempotency_key", input.idempotencyKey)
       .limit(1);
     if (sent && sent.length > 0) return { ok: true, notificationId: sent[0]!.id };
@@ -51,6 +53,7 @@ export async function sendTemplatedEmail<T extends TemplateName>(input: {
       to_email: input.to,
       template: input.template,
       subject,
+      body: text,
       payload: { idempotency_key: input.idempotencyKey ?? null },
     })
     .select("id")
@@ -58,8 +61,10 @@ export async function sendTemplatedEmail<T extends TemplateName>(input: {
   if (insertError) console.error(`[mail] failed to record notification: ${insertError.message}`);
   const notificationId = row?.id ?? null;
 
+  // 手作業で送る：送信待ちのまま残す（運営管理の「送信待ちのメール」に出る）
+  if (!mailer) return { ok: true, notificationId };
+
   try {
-    const mailer = input.mailer ?? mailerFromEnv();
     const { id } = await mailer.send({
       to: input.to,
       subject,

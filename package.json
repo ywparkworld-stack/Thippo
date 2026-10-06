@@ -16,7 +16,9 @@
     "test:db": "pnpm --filter @thippo/supabase test",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test:unit": "pnpm --filter './packages/*' test"
+    "test:unit": "pnpm --filter './packages/*' test",
+    "db:bundle": "node scripts/bundle-migrations.mjs",
+    "db:bundle:check": "node scripts/bundle-migrations.mjs --check"
   },
   "devDependencies": {
     "prettier": "^3.6.2",

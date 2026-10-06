@@ -4,16 +4,23 @@ import { createSupabaseServiceClient } from "@thippo/db/admin";
 import { issueMonthlyStatement } from "@thippo/invoice/statements";
 import { sendBookingReminderEmail, sendStatementIssuedEmails } from "@thippo/mail/booking-emails";
 import { STUB_PREFIX } from "@thippo/payments";
+import { expireDueOrders } from "@thippo/payments/checkout";
+import { paymentsMode } from "@thippo/payments/mode";
 import { stripe } from "@thippo/payments/server";
 
-/** 利用終了時刻を過ぎた予約を completed にする（SPEC §7-9。15分ごと） */
+/*
+ * 定期処理（SPEC §11）。当分は自動では動かさず、運営が運営管理の「定期処理」の画面のボタンで実行する（付録 D39）。
+ * どの処理も、同じものを2回実行しても結果が変わらないように作っている。
+ */
+
+/** 利用終了時刻を過ぎた予約を completed にする（SPEC §7-9） */
 export async function completeFinishedBookings() {
   const { data, error } = await createSupabaseServiceClient().rpc("complete_finished_bookings");
   if (error) throw new Error(error.message);
   return { completed: data ?? 0 };
 }
 
-/** 利用前日のリマインド（毎日18:00 JST。翌日の予約。付録 D31） */
+/** 利用前日のリマインド（翌日の予約。付録 D31。毎日夕方に実行する） */
 export async function sendDayBeforeReminders(now = new Date()) {
   const tomorrow = addDays(toTokyoDate(now), 1);
   const { data, error } = await createSupabaseServiceClient().rpc("claim_day_before_reminders", {
@@ -24,7 +31,7 @@ export async function sendDayBeforeReminders(now = new Date()) {
   return { date: tomorrow, sent: data?.length ?? 0 };
 }
 
-/** 利用開始2時間前のリマインド（15分ごと。付録 D31） */
+/** 利用開始2時間前のリマインド（付録 D31。2時間以内に始まる予約が対象） */
 export async function sendTwoHourReminders() {
   const { data, error } = await createSupabaseServiceClient().rpc("claim_two_hour_reminders", {});
   if (error) throw new Error(error.message);
@@ -32,7 +39,7 @@ export async function sendTwoHourReminders() {
   return { sent: data?.length ?? 0 };
 }
 
-/** 前月分の月次明細と請求書 PDF を作り、貸出主に通知する（毎月1日。SPEC §11） */
+/** 前月分の月次明細と請求書 PDF を作り、貸出主に通知する（SPEC §11。毎月1日以降に実行する） */
 export async function issuePreviousMonthStatements(now = new Date()) {
   const [y, m] = toTokyoDate(now).split("-").map(Number) as [number, number];
   const prev = new Date(Date.UTC(y, m - 2, 1));
@@ -72,7 +79,7 @@ export async function issuePreviousMonthStatements(now = new Date()) {
 }
 
 /**
- * 実際の Stripe 手数料を balance_transaction から取得して保存する（SPEC §5・§11。毎時）。
+ * 実際の Stripe 手数料を balance_transaction から取得して保存する（SPEC §5・§11。Stripe を使うときだけ）。
  * Destination charges の決済手数料はプラットフォームの残高から引かれる（fee_details の stripe_fee）。
  */
 export async function syncStripeFees(limit = 100) {
@@ -103,7 +110,7 @@ export async function syncStripeFees(limit = 100) {
   return { updated };
 }
 
-/** 毎日の片付け：レート制限のカウンター、提出されなかった本人確認のファイル、保存期間を過ぎた書類（D33） */
+/** 片付け：レート制限のカウンター、提出されなかった本人確認のファイル、保存期間を過ぎた書類（D33。1日1回程度） */
 export async function dailyCleanup() {
   const service = createSupabaseServiceClient();
   const { data: purgedCounters } = await service.rpc("purge_rate_limit_counters");
@@ -137,4 +144,73 @@ export async function dailyCleanup() {
     purgedDocuments,
     retentionConfigured: retention !== null,
   };
+}
+
+export interface JobDefinition {
+  key: string;
+  label: string;
+  /** いつ・どのくらいの間隔で実行するとよいか */
+  when: string;
+  description: string;
+  run: () => Promise<Record<string, unknown>>;
+}
+
+/** 運営管理の「定期処理」の画面に出す処理 */
+export function jobDefinitions(): JobDefinition[] {
+  const jobs: JobDefinition[] = [
+    {
+      key: "expire-orders",
+      label: "支払い期限切れの注文を閉じる",
+      when: "随時（購入手続きのときにも自動で行います）",
+      description: "15分以上支払いが終わっていない注文を期限切れにして、押さえていた枠を空けます。",
+      run: async () => ({ ...(await expireDueOrders()) }),
+    },
+    {
+      key: "complete-bookings",
+      label: "利用が終わった予約を「利用済み」にする",
+      when: "1日1回以上",
+      description: "利用終了時刻を過ぎた予約を「利用済み」にします。",
+      run: completeFinishedBookings,
+    },
+    {
+      key: "reminders-two-hours",
+      label: "2時間前のリマインドを作る",
+      when: "利用がある日に、こまめに",
+      description:
+        "2時間以内に始まる予約のリマインドメールを作ります（送信待ちのメールに入ります）。",
+      run: sendTwoHourReminders,
+    },
+    {
+      key: "reminders-day-before",
+      label: "前日のリマインドを作る",
+      when: "毎日夕方に1回",
+      description: "明日の予約のリマインドメールを作ります（送信待ちのメールに入ります）。",
+      run: sendDayBeforeReminders,
+    },
+    {
+      key: "monthly-statements",
+      label: "前月分の月次明細・請求書をまとめて発行する",
+      when: "毎月1日以降に1回",
+      description:
+        "前月に取引があった貸出主すべてに、月次明細と請求書を発行します（発行済みの貸出主は飛ばします）。",
+      run: issuePreviousMonthStatements,
+    },
+    {
+      key: "cleanup",
+      label: "片付け",
+      when: "1日1回程度",
+      description: "古いレート制限の記録と、提出されなかった本人確認のファイルを削除します。",
+      run: dailyCleanup,
+    },
+  ];
+  if (paymentsMode() === "stripe") {
+    jobs.push({
+      key: "stripe-fees",
+      label: "Stripe の決済手数料（実額）を取り込む",
+      when: "1日1回程度",
+      description: "Stripe から実際の決済手数料を取得して保存します。",
+      run: syncStripeFees,
+    });
+  }
+  return jobs;
 }

@@ -10,3 +10,4 @@ supabase/.temp/
 legacy/
 AGENTS.md
 CLAUDE.md
+supabase/setup-all.sql

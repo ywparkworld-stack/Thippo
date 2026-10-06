@@ -293,3 +293,4 @@ exclude using gist (space_id with =, period with &&)
 | D36 | 退会 | マイページに退会の機能を追加する。これからの予約（確定済み・支払い待ち）がある間は退会できない。退会後はログインできない | 2026-10-04 |
 | D37 | Stripe の実装の後回し | 運営側の事情で Stripe の接続を後回しにする。Stripe につながずに支払い・返金・入金先の登録が最後まで通る「テスト用の支払いモード」（PAYMENTS_MODE=stub）を用意し、形だけ完成させる。本番（APP_ENV=production）では使えない。Stripe の実装は残し、PAYMENTS_MODE=stripe に切り替えれば戻る | 2026-09-28 |
 | D38 | 定期実行の仕組み（D30 の変更） | Vercel の Hobby プランを使うため、Vercel Cron をやめ、GitHub Actions のスケジュール（`.github/workflows/cron.yml`）から利用者サイトの `/api/cron/*` を `CRON_SECRET` 付きで呼ぶ。数分の遅れは許容する。1回の実行は60秒まで | 2026-09-29 |
+| D39 | 当分の運用（手作業） | 外部サービスは Vercel と Supabase だけを使う。定期実行は自動で動かさず、運営管理の「定期処理」の画面のボタンで実行する（支払い期限切れの注文は購入手続きのときにも閉じる）。アプリからのメールは送らずに「送信待ち」で残し、運営が運営管理の画面で確認して手作業で送る。Stripe は使わない（キーがなければテスト用の支払いモード）。Sentry・Cloudflare Access は使わない。手順は docs/manual-setup.md | 2026-10-06 |

@@ -24,7 +24,7 @@ export default async function StatementsPage(props: PageProps<"/statements">) {
         </div>
       </div>
       <p className="text-xs text-zinc-500">
-        決済日の月で集計し、キャンセルはキャンセルした日の月に調整しています。月が終わってから発行してください（毎月1日に自動でも発行します）。
+        決済日の月で集計し、キャンセルはキャンセルした日の月に調整しています。月が終わってから発行してください（「定期処理」の画面から、まとめて発行することもできます）。
       </p>
       <Card className="overflow-x-auto p-0">
         <table className="w-full text-sm">

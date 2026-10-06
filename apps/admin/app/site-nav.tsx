@@ -17,6 +17,8 @@ export async function SiteNav() {
           <Link href="/refunds">返金</Link>
           <Link href="/statements">月次集計</Link>
           <Link href="/cancel-monitor">キャンセル監視</Link>
+          <Link href="/mail">送信待ちのメール</Link>
+          <Link href="/jobs">定期処理</Link>
           <Link href="/audit-logs">操作ログ</Link>
           <form action={signOutAction}>
             <button type="submit" className="text-zinc-600 underline">

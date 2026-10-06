@@ -84,3 +84,15 @@ describe("予約確定のメール", () => {
     expect(m.text).toContain("¥3,000");
   });
 });
+
+describe("mailModeFromEnv（付録 D39）", () => {
+  it("Resend のキーがあれば Resend、開発・テストはログ、それ以外は手作業", async () => {
+    const { mailModeFromEnv } = await import("../src");
+    expect(mailModeFromEnv({ RESEND_API_KEY: "k", MAIL_FROM: "f", APP_ENV: "staging" })).toBe(
+      "resend",
+    );
+    expect(mailModeFromEnv({ APP_ENV: "development" })).toBe("console");
+    expect(mailModeFromEnv({ APP_ENV: "staging" })).toBe("manual");
+    expect(mailModeFromEnv({ APP_ENV: "production" })).toBe("manual");
+  });
+});

@@ -529,6 +529,7 @@ export type Database = {
       };
       notifications: {
         Row: {
+          body: string | null;
           created_at: string;
           error: string | null;
           id: string;
@@ -542,6 +543,7 @@ export type Database = {
           user_id: string | null;
         };
         Insert: {
+          body?: string | null;
           created_at?: string;
           error?: string | null;
           id?: string;
@@ -555,6 +557,7 @@ export type Database = {
           user_id?: string | null;
         };
         Update: {
+          body?: string | null;
           created_at?: string;
           error?: string | null;
           id?: string;

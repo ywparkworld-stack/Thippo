@@ -5,4 +5,10 @@ export {
   type TemplateName,
   type TemplateData,
 } from "./templates";
-export { ConsoleMailer, ResendMailer, mailerFromEnv } from "./mailers";
+export {
+  ConsoleMailer,
+  ResendMailer,
+  mailModeFromEnv,
+  mailerFromEnv,
+  type MailMode,
+} from "./mailers";

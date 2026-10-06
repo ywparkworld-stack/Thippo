@@ -31,7 +31,6 @@ jobs:
       NEXT_PUBLIC_GUEST_URL: http://localhost:3000
       NEXT_PUBLIC_HOST_URL: http://localhost:3001
       ADMIN_URL: http://localhost:3002
-      CRON_SECRET: e2e-cron-secret
     steps:
       - name: 決済モードを決める
         run: |
